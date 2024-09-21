@@ -167,6 +167,16 @@ float FixedwingAttitudeControl::get_airspeed_constrained()
 	return math::constrain(airspeed, _param_fw_airspd_stall.get(), _param_fw_airspd_max.get());
 }
 
+float sync_roll_sp = 0.0f;
+float sync_yaw_sp = 0.0f;
+float sync_pitch_sp = 0.0f;
+float sync_yawrate_sp = 0.0f;
+float tecs_altitude_sp = 0.0f;
+float tecs_altitude_rate_sp = 0.0f;
+float tecs_altitude_rate_sp_direct = 0.0f;
+float tecs_tas_setpoint = 0.0f;
+float tecs_altitude = 0.0f;
+
 void FixedwingAttitudeControl::Run()
 {
 	if (should_exit()) {
@@ -262,6 +272,20 @@ void FixedwingAttitudeControl::Run()
 
 		vehicle_attitude_setpoint_poll();
 
+		//for slave, update fw att_sp from sync setpoints
+		if (_is_vtol_type==VTOL_SLAVE) {
+			if (_custom_sync_setpoint_sub.update(&_custom_sync_setpoint)) {
+				sync_roll_sp = _custom_sync_setpoint.fw_roll_sp;
+				sync_yaw_sp = _custom_sync_setpoint.fw_yaw_sp;
+				sync_pitch_sp = _custom_sync_setpoint.fw_preserve1;
+				sync_yawrate_sp = _custom_sync_setpoint.fw_preserve2;
+			}
+
+			_att_sp.roll_body = sync_roll_sp;
+			_att_sp.yaw_body = sync_yaw_sp;
+			_att_sp.pitch_body = sync_pitch_sp;
+		}
+
 		// vehicle status update must be before the vehicle_control_mode poll, otherwise rate sp are not published during whole transition
 		_vehicle_status_sub.update(&_vehicle_status);
 		const bool is_in_transition_except_tailsitter = _vehicle_status.in_transition_mode
@@ -328,7 +352,13 @@ void FixedwingAttitudeControl::Run()
 			control_input.pitch = euler_angles.theta();
 			control_input.yaw = euler_angles.psi();
 			control_input.body_z_rate = angular_velocity.xyz[2];
-			control_input.roll_setpoint = _att_sp.roll_body;
+
+			if (_is_vtol_type == VTOL_MASTER) {
+				control_input.roll_setpoint = _att_sp.roll_body - 0.05236f;	// ~3deg, A configuration
+			} else {
+				control_input.roll_setpoint = _att_sp.roll_body + 0.05236f;
+			}
+
 			control_input.pitch_setpoint = _att_sp.pitch_body;
 			control_input.yaw_setpoint = _att_sp.yaw_body;
 			control_input.euler_pitch_rate_setpoint = _pitch_ctrl.get_euler_rate_setpoint();
@@ -336,6 +366,23 @@ void FixedwingAttitudeControl::Run()
 			control_input.airspeed_constrained = get_airspeed_constrained();
 			control_input.groundspeed = _groundspeed;
 			control_input.groundspeed_scaler = groundspeed_scale;
+
+			//for debug
+			_custom_fw_att_control_input.timestamp = hrt_absolute_time();
+			_custom_fw_att_control_input.roll = control_input.roll;
+			_custom_fw_att_control_input.pitch = control_input.pitch;
+			_custom_fw_att_control_input.yaw = control_input.yaw;
+			_custom_fw_att_control_input.body_z_rate = control_input.body_z_rate;
+			_custom_fw_att_control_input.roll_setpoint = control_input.roll_setpoint;
+			_custom_fw_att_control_input.pitch_setpoint = control_input.pitch_setpoint;
+			_custom_fw_att_control_input.yaw_setpoint = control_input.yaw_setpoint;
+			_custom_fw_att_control_input.euler_pitch_rate_setpoint = control_input.euler_pitch_rate_setpoint;
+			_custom_fw_att_control_input.euler_yaw_rate_setpoint = control_input.euler_yaw_rate_setpoint;
+			_custom_fw_att_control_input.airspeed_constrained = control_input.airspeed_constrained;
+			_custom_fw_att_control_input.groundspeed = control_input.groundspeed;
+			_custom_fw_att_control_input.groundspeed_scaler = control_input.groundspeed_scaler;
+
+			_custom_fw_att_control_input_pub.publish(_custom_fw_att_control_input);
 
 			/* Run attitude controllers */
 
@@ -387,11 +434,43 @@ void FixedwingAttitudeControl::Run()
 					_rates_sp.pitch = body_rates_setpoint(1);
 					_rates_sp.yaw = body_rates_setpoint(2);
 
+					if (_is_vtol_type==VTOL_SLAVE) {
+						_rates_sp.yaw = sync_yawrate_sp;
+					}
+
 					_rates_sp.timestamp = hrt_absolute_time();
 
 					_rate_sp_pub.publish(_rates_sp);
 				}
 			}
+
+			//for master, publish to uavcan
+			//VTOL_MASTER TAG
+			if (_is_vtol_type==VTOL_MASTER) {
+				_custom_fw_sync_setpoint.timestamp = hrt_absolute_time();
+				//do not use control_input.roll_setpoint, as the command sent to uavcan will be with offset, here should use nominal value.
+				_custom_fw_sync_setpoint.fw_sync_roll_sp = _att_sp.roll_body;
+				_custom_fw_sync_setpoint.fw_sync_yaw_sp = control_input.yaw_setpoint;
+				_custom_fw_sync_setpoint.fw_preserve1 = control_input.pitch_setpoint;
+				_custom_fw_sync_setpoint.fw_preserve2 = _rates_sp.yaw;
+
+				if (_custom_tecs_setpoint_sub.update(&_custom_fw_tecs_setpoint)) {
+					tecs_altitude_sp = _custom_fw_tecs_setpoint.tecs_altitude_sp;
+					tecs_altitude_rate_sp = _custom_fw_tecs_setpoint.tecs_altitude_rate_sp;
+					tecs_altitude_rate_sp_direct = _custom_fw_tecs_setpoint.tecs_altitude_rate_sp_direct;
+					tecs_tas_setpoint = _custom_fw_tecs_setpoint.tecs_tas_setpoint;
+					tecs_altitude = _custom_fw_tecs_setpoint.tecs_altitude;
+				}
+
+				_custom_fw_sync_setpoint.fw_sync_altitude_sp = tecs_altitude_sp;
+				_custom_fw_sync_setpoint.fw_sync_altitude_rate_sp = tecs_altitude_rate_sp;
+				_custom_fw_sync_setpoint.fw_sync_altitude_rate_sp_direct = tecs_altitude_rate_sp_direct;
+				_custom_fw_sync_setpoint.fw_sync_tas_setpoint = tecs_tas_setpoint;
+				_custom_fw_sync_setpoint.fw_sync_altitude = tecs_altitude;
+
+				_custom_fw_setpoint_pub.publish(_custom_fw_sync_setpoint);
+			}
+
 
 			// wheel control
 			float wheel_u = 0.f;

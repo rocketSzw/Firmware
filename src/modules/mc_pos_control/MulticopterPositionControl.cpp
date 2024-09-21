@@ -558,6 +558,57 @@ void MulticopterPositionControl::Run()
 			vehicle_attitude_setpoint_s attitude_setpoint{};
 			_control.getAttitudeSetpoint(attitude_setpoint);
 			attitude_setpoint.timestamp = hrt_absolute_time();
+
+			// if slave, overwrite attitude setpoint
+			// if (_is_vtol_type == VTOL_SLAVE && _is_sync_type == SYNC_ATTITUDE) {
+			// 	_custom_sync_setpoint_sub.update(&_custom_sync_setpoint);
+			// 	attitude_setpoint.roll_body=_custom_sync_setpoint.mc_virtual_roll_sp;
+			// 	attitude_setpoint.pitch_body=_custom_sync_setpoint.mc_virtual_pitch_sp;
+			// 	attitude_setpoint.yaw_body=_custom_sync_setpoint.mc_virtual_yaw_sp;
+			// 	attitude_setpoint.yaw_sp_move_rate=_custom_sync_setpoint.mc_virtual_yawspeed_sp;
+			// 	attitude_setpoint.q_d[0]=_custom_sync_setpoint.mc_virtual_qd[0];
+			// 	attitude_setpoint.q_d[1]=_custom_sync_setpoint.mc_virtual_qd[1];
+			// 	attitude_setpoint.q_d[2]=_custom_sync_setpoint.mc_virtual_qd[2];
+			// 	attitude_setpoint.q_d[3]=_custom_sync_setpoint.mc_virtual_qd[3];
+
+			// 	if (_custom_sync_setpoint.mc_reset_integral > 0) {
+			// 		attitude_setpoint.reset_integral = TRUE;
+			// 	} else {
+			// 		attitude_setpoint.reset_integral = FALSE;
+			// 	}
+
+			// 	if (_custom_sync_setpoint.mc_fw_control_yaw_wheel > 0) {
+			// 		attitude_setpoint.fw_control_yaw_wheel = TRUE;
+			// 	} else {
+			// 		attitude_setpoint.fw_control_yaw_wheel = FALSE;
+			// 	}
+			// }
+
+			if (_is_vtol_type == VTOL_SLAVE && _is_sync_type_yaw_unlock == TRUE) {
+
+				_custom_sync_setpoint_sub.update(&_custom_sync_setpoint);
+				attitude_setpoint.roll_body=_custom_sync_setpoint.yaw_unlock_sync_1;
+				attitude_setpoint.pitch_body=_custom_sync_setpoint.yaw_unlock_sync_2;
+				attitude_setpoint.yaw_body=_custom_sync_setpoint.yaw_unlock_sync_3;
+				attitude_setpoint.yaw_sp_move_rate=_custom_sync_setpoint.yaw_unlock_sync_4;
+				attitude_setpoint.q_d[0]=_custom_sync_setpoint.yaw_unlock_sync_5;
+				attitude_setpoint.q_d[1]=_custom_sync_setpoint.yaw_unlock_sync_6;
+				attitude_setpoint.q_d[2]=_custom_sync_setpoint.yaw_unlock_sync_7;
+				attitude_setpoint.q_d[3]=_custom_sync_setpoint.yaw_unlock_sync_8;
+
+				if (_custom_sync_setpoint.yaw_unlock_sync_9 > 0) {
+					attitude_setpoint.reset_integral = TRUE;
+				} else {
+					attitude_setpoint.reset_integral = FALSE;
+				}
+
+				if (_custom_sync_setpoint.yaw_unlock_sync_10 > 0) {
+					attitude_setpoint.fw_control_yaw_wheel = TRUE;
+				} else {
+					attitude_setpoint.fw_control_yaw_wheel = FALSE;
+				}
+			}
+
 			_vehicle_attitude_setpoint_pub.publish(attitude_setpoint);
 
 		} else {

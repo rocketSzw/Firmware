@@ -2407,7 +2407,6 @@ FixedwingPositionControl::Run()
 
 				_att_sp.timestamp = hrt_absolute_time();
 				_attitude_sp_pub.publish(_att_sp);
-
 				// only publish status in full FW mode
 				if (_vehicle_status.vehicle_type == vehicle_status_s::VEHICLE_TYPE_FIXED_WING
 				    || _vehicle_status.in_transition_mode) {

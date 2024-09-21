@@ -53,7 +53,10 @@
 #include <uORB/topics/vehicle_local_position.h>
 #include <uORB/topics/vehicle_rates_setpoint.h>
 #include <uORB/topics/vehicle_status.h>
+#include <uORB/topics/custom_sync_setpoint.h>
+#include <drivers/uavcan/master_slave.hpp>
 #include <lib/mathlib/math/filter/AlphaFilter.hpp>
+#include <drivers/uavcan/master_slave.hpp>
 
 #include <AttitudeControl.hpp>
 
@@ -102,6 +105,7 @@ private:
 	uORB::Subscription _vehicle_control_mode_sub{ORB_ID(vehicle_control_mode)};
 	uORB::Subscription _vehicle_local_position_sub{ORB_ID(vehicle_local_position)};
 	uORB::Subscription _vehicle_status_sub{ORB_ID(vehicle_status)};
+	uORB::Subscription _custom_sync_setpoint_sub{ORB_ID(custom_sync_setpoint)};
 
 	uORB::SubscriptionCallbackWorkItem _vehicle_attitude_sub{this, ORB_ID(vehicle_attitude)};
 
@@ -110,6 +114,7 @@ private:
 
 	manual_control_setpoint_s       _manual_control_setpoint {};    /**< manual control setpoint */
 	vehicle_control_mode_s          _vehicle_control_mode {};       /**< vehicle control mode */
+	custom_sync_setpoint_s		_custom_sync_setpoint {};
 
 	perf_counter_t  _loop_perf;             /**< loop duration performance counter */
 

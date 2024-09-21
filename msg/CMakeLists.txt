@@ -60,6 +60,14 @@ set(msg_files
 	CollisionReport.msg
 	ControlAllocatorStatus.msg
 	Cpuload.msg
+	CustomMessage.msg
+	CustomTransition.msg
+	CustomSyncSetpoint.msg
+	CustomVelAccSetpoint.msg
+	CustomFwSetpoint.msg
+	CustomTecsSetpoint.msg
+	CustomFwAttControlInput.msg
+	CustomDebug.msg
 	DebugArray.msg
 	DebugKeyValue.msg
 	DebugValue.msg

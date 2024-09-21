@@ -93,8 +93,10 @@
 #include <uORB/topics/vehicle_local_position_setpoint.h>
 #include <uORB/topics/vehicle_status.h>
 #include <uORB/topics/wind.h>
+#include <uORB/topics/custom_message.h>
 #include <uORB/topics/orbit_status.h>
 #include <uORB/uORB.h>
+#include <drivers/uavcan/master_slave.hpp>
 
 using namespace launchdetection;
 using namespace runwaytakeoff;
@@ -205,6 +207,7 @@ private:
 	uORB::Subscription _vehicle_land_detected_sub{ORB_ID(vehicle_land_detected)};
 	uORB::Subscription _vehicle_status_sub{ORB_ID(vehicle_status)};
 
+	uORB::Publication<custom_message_s> _custom_message_pub{ORB_ID(custom_message)};
 	uORB::Publication<vehicle_attitude_setpoint_s> _attitude_sp_pub;
 	uORB::Publication<vehicle_local_position_setpoint_s> _local_pos_sp_pub{ORB_ID(vehicle_local_position_setpoint)};
 	uORB::Publication<npfg_status_s> _npfg_status_pub{ORB_ID(npfg_status)};
@@ -223,6 +226,7 @@ private:
 	vehicle_control_mode_s _control_mode{};
 	vehicle_local_position_s _local_pos{};
 	vehicle_status_s _vehicle_status{};
+	custom_message_s _custom_message{};
 
 	bool _position_setpoint_previous_valid{false};
 	bool _position_setpoint_current_valid{false};

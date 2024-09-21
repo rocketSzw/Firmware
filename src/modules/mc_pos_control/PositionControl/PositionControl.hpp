@@ -41,9 +41,13 @@
 
 #include <lib/mathlib/mathlib.h>
 #include <matrix/matrix/math.hpp>
+#include <uORB/Publication.hpp>
+#include <uORB/Subscription.hpp>
 #include <uORB/topics/trajectory_setpoint.h>
 #include <uORB/topics/vehicle_attitude_setpoint.h>
 #include <uORB/topics/vehicle_local_position_setpoint.h>
+#include <uORB/topics/custom_vel_acc_setpoint.h>
+#include <uORB/topics/custom_sync_setpoint.h>
 
 struct PositionControlStates {
 	matrix::Vector3f position;
@@ -226,4 +230,10 @@ private:
 	matrix::Vector3f _thr_sp; /**< desired thrust */
 	float _yaw_sp{}; /**< desired heading */
 	float _yawspeed_sp{}; /** desired yaw-speed */
+
+	custom_vel_acc_setpoint_s _custom_vel_acc_setpoint{};
+	uORB::Publication<custom_vel_acc_setpoint_s> _custom_vel_acc_sp_pub{ORB_ID(custom_vel_acc_setpoint)};
+
+	uORB::Subscription _custom_sync_setpoint_sub{ORB_ID(custom_sync_setpoint)};
+	custom_sync_setpoint_s	_custom_sync_setpoint{};
 };

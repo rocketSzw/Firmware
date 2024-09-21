@@ -64,6 +64,10 @@
 #include <uORB/topics/vehicle_land_detected.h>
 #include <uORB/topics/vehicle_local_position.h>
 #include <uORB/topics/vehicle_local_position_setpoint.h>
+#include <uORB/topics/custom_sync_setpoint.h>
+#include <uORB/topics/custom_vel_acc_setpoint.h>
+#include <drivers/uavcan/master_slave.hpp>
+
 
 using namespace time_literals;
 
@@ -105,12 +109,15 @@ private:
 	uORB::Subscription _vehicle_constraints_sub{ORB_ID(vehicle_constraints)};
 	uORB::Subscription _vehicle_control_mode_sub{ORB_ID(vehicle_control_mode)};
 	uORB::Subscription _vehicle_land_detected_sub{ORB_ID(vehicle_land_detected)};
+	uORB::Subscription _custom_sync_setpoint_sub{ORB_ID(custom_sync_setpoint)};
 
 	hrt_abstime _time_stamp_last_loop{0};		/**< time stamp of last loop iteration */
 	hrt_abstime _time_position_control_enabled{0};
 
 	trajectory_setpoint_s _setpoint{PositionControl::empty_trajectory_setpoint};
 	vehicle_control_mode_s _vehicle_control_mode{};
+	custom_sync_setpoint_s	_custom_sync_setpoint{};
+
 
 	vehicle_constraints_s _vehicle_constraints {
 		.timestamp = 0,

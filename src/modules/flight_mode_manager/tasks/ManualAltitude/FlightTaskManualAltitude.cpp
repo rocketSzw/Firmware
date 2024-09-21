@@ -39,6 +39,8 @@
 #include <float.h>
 #include <mathlib/mathlib.h>
 #include <geo/geo.h>
+#include <drivers/uavcan/master_slave.hpp>
+
 
 using namespace matrix;
 
@@ -277,10 +279,18 @@ void FlightTaskManualAltitude::_updateHeadingSetpoints()
 {
 	if (_isYawInput() || !_is_yaw_good_for_control) {
 		_unlockYaw();
-
+		if (_isYawInput() ){
+			if(_is_vtol_type == VTOL_MASTER){
+				_is_sync_type_yaw_unlock = TRUE;
+			}
+		}
 	} else {
 		_lockYaw();
+		if(_is_vtol_type == VTOL_MASTER){
+			_is_sync_type_yaw_unlock = FALSE;
+		}
 	}
+
 }
 
 bool FlightTaskManualAltitude::_isYawInput()

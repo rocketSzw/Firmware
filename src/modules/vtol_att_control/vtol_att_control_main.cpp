@@ -64,16 +64,23 @@ VtolAttitudeControl::VtolAttitudeControl() :
 
 	parameters_update();
 
-	if (static_cast<vtol_type>(_param_vt_type.get()) == vtol_type::TAILSITTER) {
-		_vtol_type = new Tailsitter(this);
+	// if (static_cast<vtol_type>(_param_vt_type.get()) == vtol_type::TAILSITTER) {
+	// 	_vtol_type = new Tailsitter(this);
 
-	} else if (static_cast<vtol_type>(_param_vt_type.get()) == vtol_type::TILTROTOR) {
+	// } else if (static_cast<vtol_type>(_param_vt_type.get()) == vtol_type::TILTROTOR) {
+	// 	_vtol_type = new Tiltrotor(this);
+
+	// } else if (static_cast<vtol_type>(_param_vt_type.get()) == vtol_type::STANDARD) {
+	// 	_vtol_type = new Standard(this);
+
+	// } else {
+	// 	exit_and_cleanup();
+	// }
+
+	// delete standard and tailsitter.
+	if (static_cast<vtol_type>(_param_vt_type.get()) == vtol_type::TILTROTOR) {
 		_vtol_type = new Tiltrotor(this);
-
-	} else if (static_cast<vtol_type>(_param_vt_type.get()) == vtol_type::STANDARD) {
-		_vtol_type = new Standard(this);
-
-	} else {
+	}else {
 		exit_and_cleanup();
 	}
 
@@ -274,6 +281,8 @@ VtolAttitudeControl::parameters_update()
 			_vtol_type->parameters_update();
 		}
 	}
+
+	_is_vtol_type = _param_vt_is_vtol_type.get();
 }
 
 void
@@ -438,30 +447,30 @@ VtolAttitudeControl::Run()
 		_vtol_vehicle_status.timestamp = hrt_absolute_time();
 		_vtol_vehicle_status_pub.publish(_vtol_vehicle_status);
 
-		// Publish flaps/spoiler setpoint with configured deflection in Hover if in Auto.
-		// In Manual always published in FW rate controller, and in Auto FW in FW Position Controller.
-		if (_vehicle_control_mode.flag_control_auto_enabled
-		    && _vtol_vehicle_status.vehicle_vtol_state != vtol_vehicle_status_s::VEHICLE_VTOL_STATE_FW) {
+		// // Publish flaps/spoiler setpoint with configured deflection in Hover if in Auto.
+		// // In Manual always published in FW rate controller, and in Auto FW in FW Position Controller.
+		// if (_vehicle_control_mode.flag_control_auto_enabled
+		//     && _vtol_vehicle_status.vehicle_vtol_state != vtol_vehicle_status_s::VEHICLE_VTOL_STATE_FW) {
 
-			// flaps
-			normalized_unsigned_setpoint_s flaps_setpoint;
-			flaps_setpoint.normalized_setpoint = 0.f; // for now always set flaps to 0 in transitions and hover
-			flaps_setpoint.timestamp = hrt_absolute_time();
-			_flaps_setpoint_pub.publish(flaps_setpoint);
+		// 	// flaps
+		// 	normalized_unsigned_setpoint_s flaps_setpoint;
+		// 	flaps_setpoint.normalized_setpoint = 0.f; // for now always set flaps to 0 in transitions and hover
+		// 	flaps_setpoint.timestamp = hrt_absolute_time();
+		// 	_flaps_setpoint_pub.publish(flaps_setpoint);
 
-			// spoilers
-			float spoiler_control = 0.f;
+		// 	// spoilers
+		// 	float spoiler_control = 0.f;
 
-			if ((_pos_sp_triplet.current.valid && _pos_sp_triplet.current.type == position_setpoint_s::SETPOINT_TYPE_LAND) ||
-			    _vehicle_status.nav_state == vehicle_status_s::NAVIGATION_STATE_DESCEND) {
-				spoiler_control = _param_vt_spoiler_mc_ld.get();
-			}
+		// 	if ((_pos_sp_triplet.current.valid && _pos_sp_triplet.current.type == position_setpoint_s::SETPOINT_TYPE_LAND) ||
+		// 	    _vehicle_status.nav_state == vehicle_status_s::NAVIGATION_STATE_DESCEND) {
+		// 		spoiler_control = _param_vt_spoiler_mc_ld.get();
+		// 	}
 
-			normalized_unsigned_setpoint_s spoiler_setpoint;
-			spoiler_setpoint.normalized_setpoint = spoiler_control;
-			spoiler_setpoint.timestamp = hrt_absolute_time();
-			_spoilers_setpoint_pub.publish(spoiler_setpoint);
-		}
+		// 	normalized_unsigned_setpoint_s spoiler_setpoint;
+		// 	spoiler_setpoint.normalized_setpoint = spoiler_control;
+		// 	spoiler_setpoint.timestamp = hrt_absolute_time();
+		// 	_spoilers_setpoint_pub.publish(spoiler_setpoint);
+		// }
 	}
 
 	perf_end(_loop_perf);

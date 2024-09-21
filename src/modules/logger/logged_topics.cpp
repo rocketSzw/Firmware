@@ -75,6 +75,16 @@ void LoggedTopics::add_default_topics()
 	add_topic("home_position");
 	add_topic("hover_thrust_estimate", 100);
 	add_topic("input_rc", 500);
+	add_topic("custom_message");
+	add_topic("fw_virtual_attitude_setpoint",10);
+	add_topic("mc_virtual_attitude_setpoint",10);
+	add_topic("custom_transition");
+	add_topic("custom_sync_setpoint");
+	add_topic("custom_tecs_setpoint");
+	add_topic("custom_fw_setpoint");
+	add_topic("custom_transition");
+	add_topic("custom_fw_att_control_input");
+	add_topic("custom_debug");
 	add_optional_topic("internal_combustion_engine_status", 10);
 	add_optional_topic("iridiumsbd_status", 1000);
 	add_optional_topic("irlock_report", 1000);
@@ -113,7 +123,7 @@ void LoggedTopics::add_default_topics()
 	add_topic("vehicle_air_data", 200);
 	add_topic("vehicle_angular_velocity", 20);
 	add_topic("vehicle_attitude", 50);
-	add_topic("vehicle_attitude_setpoint", 50);
+	add_topic("vehicle_attitude_setpoint", 10);
 	add_topic("vehicle_command");
 	add_topic("vehicle_command_ack");
 	add_topic("vehicle_constraints", 1000);
@@ -131,7 +141,7 @@ void LoggedTopics::add_default_topics()
 	add_topic("wind", 1000);
 
 	// multi topics
-	add_optional_topic_multi("actuator_outputs", 100, 3);
+	add_optional_topic_multi("actuator_outputs", 10, 3);
 	add_optional_topic_multi("airspeed_wind", 1000, 4);
 	add_optional_topic_multi("control_allocator_status", 200, 2);
 	add_optional_topic_multi("rate_ctrl_status", 200, 2);

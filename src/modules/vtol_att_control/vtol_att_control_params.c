@@ -413,3 +413,16 @@ PARAM_DEFINE_FLOAT(VT_LND_PITCH_MIN, -5.0f);
  * @group VTOL Attitude Control
  */
 PARAM_DEFINE_FLOAT(VT_SPOILER_MC_LD, 0.f);
+
+
+/**
+ * IS_VTOL_TYPE (MASTER=0, SLAVE=1)
+ *
+ * @value 0 MASTER
+ * @value 1 SLAVE
+ * @min 0
+ * @max 1
+ * @reboot_required true
+ * @group VTOL Attitude Control
+ */
+PARAM_DEFINE_INT32(IS_VTOL_TYPE, 0);

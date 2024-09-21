@@ -84,8 +84,11 @@
 #include <uORB/topics/vehicle_status.h>
 #include <uORB/topics/vehicle_thrust_setpoint.h>
 #include <uORB/topics/vehicle_torque_setpoint.h>
-#include "standard.h"
-#include "tailsitter.h"
+#include <uORB/topics/custom_message.h>
+#include <uORB/topics/custom_transition.h>
+#include <drivers/uavcan/master_slave.hpp>
+//#include "standard.h"
+//#include "tailsitter.h"
 #include "tiltrotor.h"
 
 using namespace time_literals;
@@ -180,6 +183,7 @@ private:
 	uORB::PublicationMulti<vehicle_torque_setpoint_s>	_vehicle_torque_setpoint0_pub{ORB_ID(vehicle_torque_setpoint)};
 	uORB::PublicationMulti<vehicle_torque_setpoint_s>	_vehicle_torque_setpoint1_pub{ORB_ID(vehicle_torque_setpoint)};
 	uORB::Publication<vtol_vehicle_status_s>		_vtol_vehicle_status_pub{ORB_ID(vtol_vehicle_status)};
+	uORB::Publication<custom_message_s>			_custom_message_pub{ORB_ID(custom_message)};
 
 	orb_advert_t	_mavlink_log_pub{nullptr};	// mavlink log uORB handle
 
@@ -197,6 +201,7 @@ private:
 	vehicle_thrust_setpoint_s		_thrust_setpoint_0{};
 	vehicle_thrust_setpoint_s		_thrust_setpoint_1{};
 
+	custom_message_s			_custom_message{};
 	airspeed_validated_s 			_airspeed_validated{};
 	position_setpoint_triplet_s		_pos_sp_triplet{};
 	tecs_status_s				_tecs_status{};
@@ -237,6 +242,8 @@ private:
 
 	DEFINE_PARAMETERS(
 		(ParamInt<px4::params::VT_TYPE>) _param_vt_type,
-		(ParamFloat<px4::params::VT_SPOILER_MC_LD>) _param_vt_spoiler_mc_ld
+		(ParamFloat<px4::params::VT_SPOILER_MC_LD>) _param_vt_spoiler_mc_ld,
+		(ParamBool<px4::params::IS_VTOL_TYPE>) _param_vt_is_vtol_type
+
 	)
 };

@@ -58,6 +58,7 @@
 #include "sensors/sensor_bridge.hpp"
 #include "uavcan_driver.hpp"
 #include "uavcan_servers.hpp"
+#include "master_slave.hpp"
 
 #include <lib/drivers/device/Device.hpp>
 #include <lib/mixer_module/mixer_module.hpp>
@@ -79,6 +80,15 @@
 #include <uORB/topics/uavcan_parameter_request.h>
 #include <uORB/topics/uavcan_parameter_value.h>
 #include <uORB/topics/vehicle_command_ack.h>
+#include <uORB/topics/vehicle_rates_setpoint.h>
+#include <uORB/topics/custom_message.h>
+#include <uORB/topics/custom_transition.h>
+#include <uORB/topics/vehicle_attitude.h>
+#include <uORB/topics/vehicle_attitude_setpoint.h>
+#include <uORB/topics/vehicle_rates_setpoint.h>
+#include <uORB/topics/custom_sync_setpoint.h>
+#include <uORB/topics/custom_vel_acc_setpoint.h>
+#include <uORB/topics/custom_fw_setpoint.h>
 
 using namespace time_literals;
 
@@ -268,9 +278,31 @@ private:
 	uORB::SubscriptionInterval	_parameter_update_sub{ORB_ID(parameter_update), 1_s};
 	uORB::Subscription _vcmd_sub{ORB_ID(vehicle_command)};
 	uORB::Subscription _param_request_sub{ORB_ID(uavcan_parameter_request)};
+	uORB::Subscription _mc_virtual_attitude_setpoint_sub{ORB_ID(mc_virtual_attitude_setpoint)};
+	uORB::Subscription _fw_virtual_attitude_setpoint_sub{ORB_ID(fw_virtual_attitude_setpoint)};
+
+	uORB::Subscription _vehicle_attitude_setpoint_sub{ORB_ID(vehicle_attitude_setpoint)};
+	uORB::Subscription _vehicle_rates_setpoint_sub{ORB_ID(vehicle_rates_setpoint)};
+	uORB::Subscription _vehicle_attitude_sub{ORB_ID(vehicle_attitude)};
+	uORB::Subscription _vehicle_transition_sub{ORB_ID(custom_transition)};
+	uORB::Subscription _vehicle_custom_vel_acc_setpoint_sub{ORB_ID(custom_vel_acc_setpoint)};
+	uORB::Subscription _custom_fw_setpoint_sub{ORB_ID(custom_fw_setpoint)};
+
+	struct vehicle_attitude_setpoint_s _mc_virtual;
+	struct vehicle_attitude_setpoint_s _fw_virtual;
+	struct vehicle_attitude_setpoint_s _vehicle_att_sp;
+	struct vehicle_rates_setpoint_s _vehicle_rates_sp;
+	struct vehicle_attitude_s _vehicle_att;
+	struct custom_transition_s _vehicle_transition;
+	struct custom_message_s uavcan_custom_message;
+	struct custom_sync_setpoint_s _custom_sync_setpoint;
+	struct custom_vel_acc_setpoint_s uavcan_custom_vel_acc_setpoint;
+	struct custom_fw_setpoint_s uavcan_custom_fw_setpoint;
 
 	uORB::Publication<uavcan_parameter_value_s> _param_response_pub{ORB_ID(uavcan_parameter_value)};
 	uORB::Publication<vehicle_command_ack_s>	_command_ack_pub{ORB_ID(vehicle_command_ack)};
+	uORB::Publication<custom_message_s>		_custom_message_pub{ORB_ID(custom_message)};
+	uORB::Publication<custom_sync_setpoint_s>	_custom_sync_setpoint_pub{ORB_ID(custom_sync_setpoint)};
 
 	/*
 	 * The MAVLink parameter bridge needs to know the maximum parameter index

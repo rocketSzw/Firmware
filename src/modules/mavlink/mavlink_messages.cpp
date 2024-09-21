@@ -55,6 +55,7 @@
 #include <uORB/Subscription.hpp>
 #include <uORB/SubscriptionMultiArray.hpp>
 #include <uORB/topics/vehicle_status.h>
+#include <uORB/topics/custom_message.h>
 
 #include "streams/ACTUATOR_OUTPUT_STATUS.hpp"
 #include "streams/ALTITUDE.hpp"
@@ -69,6 +70,7 @@
 #include "streams/COMMAND_LONG.hpp"
 #include "streams/COMPONENT_INFORMATION.hpp"
 #include "streams/COMPONENT_METADATA.hpp"
+#include "streams/CUSTOM_MESSAGE.hpp"
 #include "streams/DISTANCE_SENSOR.hpp"
 #include "streams/EFI_STATUS.hpp"
 #include "streams/ESC_INFO.hpp"
@@ -471,6 +473,9 @@ static const StreamListItem streams_list[] = {
 #if defined(RAW_RPM_HPP)
 	create_stream_list_item<MavlinkStreamRawRpm>(),
 #endif // RAW_RPM_HPP
+#if defined(CUSTOM_MESSAGE_HPP)
+	create_stream_list_item<MavlinkStreamCustomMessage>(),
+#endif // CUSTOM_MESSAGE
 #if defined(EFI_STATUS_HPP)
 	create_stream_list_item<MavlinkStreamEfiStatus>(),
 #endif // EFI_STATUS_HPP

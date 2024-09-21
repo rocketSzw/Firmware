@@ -1,0 +1,37 @@
+# CustomMessage added by PQ 2024.1.10
+uint64 timestamp	# time since system start (microseconds)
+
+float32 mc_virtual_roll_sp
+float32 mc_virtual_pitch_sp
+float32 mc_virtual_yaw_sp
+float32 mc_virtual_yawspeed_sp
+float32[4] mc_virtual_qd
+float32 mc_reset_integral
+float32 mc_fw_control_yaw_wheel
+
+float32 fw_roll_sp
+float32 fw_yaw_sp
+float32 fw_altitude
+float32 fw_altitude_sp
+float32 fw_altitude_rate_sp
+float32 fw_altitude_rate_sp_direct
+float32 fw_tas_sp
+float32 fw_preserve1
+float32 fw_preserve2
+float32 fw_preserve3
+
+float32 yawrate_sp_from_rates_ctrl
+int8 custom_sync_is_fixed_wing_requested
+int8 custom_sync_is_transition_p1_to_p2
+int8 custom_sync_exit_backtransition
+
+float32 yaw_unlock_sync_1
+float32 yaw_unlock_sync_2
+float32 yaw_unlock_sync_3
+float32 yaw_unlock_sync_4
+float32 yaw_unlock_sync_5
+float32 yaw_unlock_sync_6
+float32 yaw_unlock_sync_7
+float32 yaw_unlock_sync_8
+float32 yaw_unlock_sync_9
+float32 yaw_unlock_sync_10

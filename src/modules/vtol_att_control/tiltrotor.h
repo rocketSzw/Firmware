@@ -45,7 +45,11 @@
 #include <drivers/drv_hrt.h>
 
 #include <uORB/Publication.hpp>
+#include <uORB/Subscription.hpp>
 #include <uORB/topics/tiltrotor_extra_controls.h>
+#include <uORB/topics/custom_sync_setpoint.h>
+#include <uORB/topics/custom_transition.h>
+#include <uORB/topics/custom_debug.h>
 
 class Tiltrotor : public VtolType
 {
@@ -81,6 +85,9 @@ private:
 	vtol_mode _vtol_mode{vtol_mode::MC_MODE};			/**< vtol flight mode, defined by enum vtol_mode */
 
 	uORB::Publication<tiltrotor_extra_controls_s>	_tiltrotor_extra_controls_pub{ORB_ID(tiltrotor_extra_controls)};
+	uORB::Publication<custom_transition_s>			_custom_transition_pub{ORB_ID(custom_transition)};
+	uORB::Publication<custom_debug_s>			_custom_debug_pub{ORB_ID(custom_debug)};
+
 
 	float _tilt_control{0.0f};		/**< actuator value for the tilt servo */
 
@@ -90,6 +97,12 @@ private:
 
 	void blendThrottleDuringBacktransition(const float scale, const float target_throttle);
 	bool isFrontTransitionCompletedBase() override;
+
+	uORB::Subscription _custom_sync_setpoint_sub{ORB_ID(custom_sync_setpoint)};
+	custom_sync_setpoint_s 		_custom_sync_setpoint;
+	custom_debug_s			_custom_debug;
+
+	custom_transition_s		_transition_uavcan{};
 
 	hrt_abstime _last_timestamp_disarmed{0}; /**< used for calculating time since arming */
 	bool _tilt_motors_for_startup{false};

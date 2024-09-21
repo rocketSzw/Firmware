@@ -47,9 +47,9 @@
 #include <uORB/PublicationMulti.hpp>
 #include <uORB/topics/differential_pressure.h>
 
-#define I2C_ADDRESS_1_SDP3X 0x21
-#define I2C_ADDRESS_2_SDP3X 0x22
-#define I2C_ADDRESS_3_SDP3X 0x23
+#define I2C_ADDRESS_1_SDP3X 0x25
+#define I2C_ADDRESS_2_SDP3X 0x25
+#define I2C_ADDRESS_3_SDP3X 0x25
 
 static constexpr uint32_t I2C_SPEED = 100 * 1000; // 100 kHz I2C serial interface
 

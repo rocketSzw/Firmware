@@ -60,11 +60,18 @@
 #include <uORB/topics/vehicle_angular_velocity.h>
 #include <uORB/topics/vehicle_attitude.h>
 #include <uORB/topics/vehicle_attitude_setpoint.h>
+#include <drivers/uavcan/master_slave.hpp>
 #include <uORB/topics/vehicle_control_mode.h>
 #include <uORB/topics/vehicle_local_position.h>
 #include <uORB/topics/vehicle_land_detected.h>
 #include <uORB/topics/vehicle_rates_setpoint.h>
 #include <uORB/topics/vehicle_status.h>
+#include <uORB/topics/custom_message.h>
+#include <uORB/topics/custom_tecs_setpoint.h>
+#include <uORB/topics/custom_fw_setpoint.h>
+#include <uORB/topics/custom_sync_setpoint.h>
+#include <uORB/topics/custom_fw_att_control_input.h>
+#include <drivers/uavcan/master_slave.hpp>
 
 using matrix::Eulerf;
 using matrix::Quatf;
@@ -106,12 +113,17 @@ private:
 	uORB::Subscription _vehicle_land_detected_sub{ORB_ID(vehicle_land_detected)};		/**< vehicle land detected subscription */
 	uORB::Subscription _vehicle_status_sub{ORB_ID(vehicle_status)};				/**< vehicle status subscription */
 	uORB::Subscription _vehicle_rates_sub{ORB_ID(vehicle_angular_velocity)};
+	uORB::Subscription _custom_tecs_setpoint_sub{ORB_ID(custom_tecs_setpoint)};
+	uORB::Subscription _custom_sync_setpoint_sub{ORB_ID(custom_sync_setpoint)};
 
 	uORB::SubscriptionData<airspeed_validated_s> _airspeed_validated_sub{ORB_ID(airspeed_validated)};
 
+	uORB::Publication<custom_message_s> 		_custom_message_pub{ORB_ID(custom_message)};
+	uORB::Publication<custom_fw_setpoint_s> 	_custom_fw_setpoint_pub{ORB_ID(custom_fw_setpoint)};
 	uORB::Publication<vehicle_attitude_setpoint_s>	_attitude_sp_pub;
 	uORB::Publication<vehicle_rates_setpoint_s>	_rate_sp_pub{ORB_ID(vehicle_rates_setpoint)};
 	uORB::Publication<landing_gear_wheel_s>		_landing_gear_wheel_pub{ORB_ID(landing_gear_wheel)};
+	uORB::Publication<custom_fw_att_control_input_s> 	_custom_fw_att_control_input_pub{ORB_ID(custom_fw_att_control_input)};
 
 	manual_control_setpoint_s		_manual_control_setpoint{};
 	vehicle_attitude_setpoint_s		_att_sp{};
@@ -119,6 +131,11 @@ private:
 	vehicle_rates_setpoint_s		_rates_sp{};
 	vehicle_status_s			_vehicle_status{};
 	landing_gear_wheel_s			_landing_gear_wheel{};
+	custom_message_s 			_custom_message{};
+	custom_tecs_setpoint_s 			_custom_fw_tecs_setpoint;
+	custom_fw_setpoint_s 			_custom_fw_sync_setpoint;
+	custom_sync_setpoint_s 			_custom_sync_setpoint;
+	custom_fw_att_control_input_s 		_custom_fw_att_control_input;
 
 	matrix::Dcmf _R{matrix::eye<float, 3>()};
 

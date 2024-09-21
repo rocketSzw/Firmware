@@ -41,6 +41,7 @@
 #include <mathlib/mathlib.h>
 #include <px4_platform_common/defines.h>
 #include <geo/geo.h>
+#include <drivers/uavcan/master_slave.hpp>
 
 using namespace matrix;
 
@@ -110,11 +111,11 @@ bool PositionControl::update(const float dt)
 	bool valid = _inputValid();
 
 	if (valid) {
-		_positionControl();
-		_velocityControl(dt);
-
 		_yawspeed_sp = PX4_ISFINITE(_yawspeed_sp) ? _yawspeed_sp : 0.f;
 		_yaw_sp = PX4_ISFINITE(_yaw_sp) ? _yaw_sp : _yaw; // TODO: better way to disable yaw control
+
+		_positionControl();
+		_velocityControl(dt);
 	}
 
 	// There has to be a valid output acceleration and thrust setpoint otherwise something went wrong
@@ -139,6 +140,33 @@ void PositionControl::_positionControl()
 
 void PositionControl::_velocityControl(const float dt)
 {
+	//sync vel and acc setpoints
+	if(_is_vtol_type == VTOL_MASTER && _is_sync_type == SYNC_VEL_ACC){
+		_custom_vel_acc_setpoint.timestamp = hrt_absolute_time();
+		_custom_vel_acc_setpoint.vel_sp_1 = _vel_sp(0);
+		_custom_vel_acc_setpoint.vel_sp_2 = _vel_sp(1);
+		_custom_vel_acc_setpoint.vel_sp_3 = _vel_sp(2);
+		_custom_vel_acc_setpoint.acc_sp_1 = _acc_sp(0);
+		_custom_vel_acc_setpoint.acc_sp_2 = _acc_sp(1);
+		_custom_vel_acc_setpoint.acc_sp_3 = _acc_sp(2);
+		_custom_vel_acc_setpoint.yaw_sp = _yaw_sp;
+		_custom_vel_acc_setpoint.yawspeed_sp = _yawspeed_sp;
+
+		_custom_vel_acc_sp_pub.publish(_custom_vel_acc_setpoint);
+	}
+
+	if (_is_vtol_type == VTOL_SLAVE && _is_sync_type == SYNC_VEL_ACC) {
+		_custom_sync_setpoint_sub.update(&_custom_sync_setpoint);
+		_vel_sp(0) = _custom_sync_setpoint.mc_virtual_roll_sp;
+		_vel_sp(1) = _custom_sync_setpoint.mc_virtual_pitch_sp;
+		_vel_sp(2) = _custom_sync_setpoint.mc_virtual_yaw_sp;
+		_acc_sp(0) = _custom_sync_setpoint.mc_virtual_yawspeed_sp;
+		_acc_sp(1) = _custom_sync_setpoint.mc_virtual_qd[0];
+		_acc_sp(2) = _custom_sync_setpoint.mc_virtual_qd[1];
+		_yaw_sp = _custom_sync_setpoint.mc_virtual_qd[2];
+		_yawspeed_sp = _custom_sync_setpoint.mc_virtual_qd[3];
+	}
+
 	// Constrain vertical velocity integral
 	_vel_int(2) = math::constrain(_vel_int(2), -CONSTANTS_ONE_G, CONSTANTS_ONE_G);
 

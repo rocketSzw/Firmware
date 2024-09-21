@@ -37,6 +37,7 @@
 #include "FlightTaskAuto.hpp"
 #include <mathlib/mathlib.h>
 #include <float.h>
+#include <drivers/uavcan/master_slave.hpp>
 
 using namespace matrix;
 
@@ -507,6 +508,9 @@ bool FlightTaskAuto::_evaluateTriplets()
 	} else {
 		if (!_is_yaw_good_for_control) {
 			_yaw_lock = false;
+			if(_is_vtol_type == VTOL_MASTER){
+				_is_sync_type_yaw_unlock = TRUE;
+			}
 			_yaw_setpoint = NAN;
 			_yawspeed_setpoint = 0.f;
 
@@ -568,16 +572,25 @@ void FlightTaskAuto::_set_heading_from_mode()
 		if (v.longerThan(_target_acceptance_radius)) {
 			if (_compute_heading_from_2D_vector(_yaw_setpoint, v)) {
 				_yaw_lock = true;
+				if(_is_vtol_type == VTOL_MASTER){
+					_is_sync_type_yaw_unlock = FALSE;
+				}
 			}
 		}
 
 		if (!_yaw_lock) {
 			_yaw_setpoint = _yaw;
 			_yaw_lock = true;
+			if(_is_vtol_type == VTOL_MASTER){
+				_is_sync_type_yaw_unlock = FALSE;
+			}
 		}
 
 	} else {
 		_yaw_lock = false;
+		if(_is_vtol_type == VTOL_MASTER){
+			_is_sync_type_yaw_unlock = TRUE;
+		}
 		_yaw_setpoint = NAN;
 	}
 

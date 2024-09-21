@@ -449,7 +449,12 @@ void TECSControl::_calcPitchControlUpdate(float dt, const Input &input, const Co
 	if (param.integrator_gain_pitch > FLT_EPSILON) {
 
 		// Calculate derivative from change in climb angle to rate of change of specific energy balance
-		const float climb_angle_to_SEB_rate = input.tas * CONSTANTS_ONE_G;
+		float climb_angle_to_SEB_rate = input.tas * CONSTANTS_ONE_G;
+
+		// in case input.tas is too small, added by Qi, 2023.12.24
+		if (input.tas >= 0.0f && input.tas <= 0.5f ){
+			climb_angle_to_SEB_rate = CONSTANTS_ONE_G;
+		}
 
 		// Calculate pitch integrator input term
 		float pitch_integ_input = _getControlError(seb_rate) * param.integrator_gain_pitch / climb_angle_to_SEB_rate;
@@ -474,7 +479,12 @@ float TECSControl::_calcPitchControlOutput(const Input &input, const ControlValu
 		const Flag &flag) const
 {
 	// Calculate derivative from change in climb angle to rate of change of specific energy balance
-	const float climb_angle_to_SEB_rate = input.tas * CONSTANTS_ONE_G;
+	float climb_angle_to_SEB_rate = input.tas * CONSTANTS_ONE_G;
+
+	// in case input.tas is too small, added by Qi, 2023.12.24
+	if (input.tas >= 0.0f && input.tas <= 0.5f ){
+		climb_angle_to_SEB_rate = CONSTANTS_ONE_G;
+	}
 
 	// Calculate a specific energy correction that doesn't include the integrator contribution
 	float SEB_rate_correction = _getControlError(seb_rate) * param.pitch_damping_gain +
@@ -680,6 +690,8 @@ void TECS::initialize(const float altitude, const float altitude_rate, const flo
 	_update_timestamp = hrt_absolute_time();
 }
 
+float altitude_feedback = 0.0f;
+
 void TECS::update(float pitch, float altitude, float hgt_setpoint, float EAS_setpoint, float equivalent_airspeed,
 		  float eas_to_tas, float throttle_min, float throttle_setpoint_max,
 		  float throttle_trim, float throttle_trim_adjusted, float pitch_limit_min, float pitch_limit_max, float target_climbrate,
@@ -735,7 +747,29 @@ void TECS::update(float pitch, float altitude, float hgt_setpoint, float EAS_set
 		control_setpoint.tas_setpoint = _update_speed_setpoint(eas_to_tas * _equivalent_airspeed_min,
 						eas_to_tas * _equivalent_airspeed_max, EAS_setpoint * eas_to_tas, eas_to_tas * eas.speed);
 
-		const TECSControl::Input control_input{ .altitude = altitude,
+
+		if (_is_vtol_type==VTOL_MASTER) {
+			altitude_feedback = altitude;
+
+			//for master, publish to uavcan
+			_custom_tecs_setpoint.timestamp = hrt_absolute_time();
+			_custom_tecs_setpoint.tecs_altitude_sp = control_setpoint.altitude_reference.alt;
+			_custom_tecs_setpoint.tecs_altitude_rate_sp = control_setpoint.altitude_reference.alt_rate;
+			_custom_tecs_setpoint.tecs_altitude_rate_sp_direct = control_setpoint.altitude_rate_setpoint_direct;
+			_custom_tecs_setpoint.tecs_tas_setpoint = control_setpoint.tas_setpoint;
+			_custom_tecs_setpoint.tecs_altitude = altitude_feedback;
+			_custom_tecs_setpoint_pub.publish(_custom_tecs_setpoint);
+		} else {
+			if (_custom_sync_setpoint_sub.update(&_custom_sync_setpoint)) {
+				control_setpoint.altitude_reference.alt = _custom_sync_setpoint.fw_altitude_sp;
+				control_setpoint.altitude_reference.alt_rate = _custom_sync_setpoint.fw_altitude_rate_sp;
+				control_setpoint.altitude_rate_setpoint_direct = _custom_sync_setpoint.fw_altitude_rate_sp_direct;
+				control_setpoint.tas_setpoint = _custom_sync_setpoint.fw_tas_sp;
+				altitude_feedback = _custom_sync_setpoint.fw_altitude;
+			}
+		}
+
+		const TECSControl::Input control_input{ .altitude = altitude_feedback,
 							.altitude_rate = hgt_rate,
 							.tas = eas_to_tas * eas.speed,
 							.tas_rate = eas_to_tas * eas.speed_rate};

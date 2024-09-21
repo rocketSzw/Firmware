@@ -59,6 +59,7 @@
 #include <uORB/topics/vehicle_status.h>
 #include <uORB/topics/vehicle_thrust_setpoint.h>
 #include <uORB/topics/vehicle_torque_setpoint.h>
+#include <drivers/uavcan/master_slave.hpp>
 
 using namespace time_literals;
 

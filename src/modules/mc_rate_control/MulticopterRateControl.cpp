@@ -249,6 +249,9 @@ MulticopterRateControl::Run()
 				}
 			}
 
+			// limit yaw control torque to prevent from servo 5 being too large
+			// vehicle_torque_setpoint.xyz[2] = math::constrain(vehicle_torque_setpoint.xyz[2], -0.8f, 0.8f);
+
 			vehicle_thrust_setpoint.timestamp_sample = angular_velocity.timestamp_sample;
 			vehicle_thrust_setpoint.timestamp = hrt_absolute_time();
 			_vehicle_thrust_setpoint_pub.publish(vehicle_thrust_setpoint);

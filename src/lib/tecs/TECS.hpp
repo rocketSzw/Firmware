@@ -45,10 +45,14 @@
 #include <lib/mathlib/math/filter/AlphaFilter.hpp>
 
 #include <uORB/Publication.hpp>
+#include <uORB/Subscription.hpp>
 #include <uORB/topics/tecs_status.h>
 #include <uORB/uORB.h>
 #include <motion_planning/VelocitySmoothing.hpp>
 #include <motion_planning/ManualVelocitySmoothingZ.hpp>
+#include <uORB/topics/custom_tecs_setpoint.h>
+#include <drivers/uavcan/master_slave.hpp>
+#include <uORB/topics/custom_sync_setpoint.h>
 
 class TECSAirspeedFilter
 {
@@ -697,8 +701,12 @@ private:
 		.vert_accel_limit = 0.0f,
 		.equivalent_airspeed_trim = 15.0f,
 		.tas_min = 3.0f,
-		.pitch_max = 5.0f,
-		.pitch_min = -5.0f,
+		//.pitch_max = 5.0f,
+		//.pitch_min = -5.0f,
+		// pitch limits are too large, 5.0f equals to about 280 degrees
+		// 0.53f equals to about 30 degrees
+		.pitch_max = 0.53f,
+		.pitch_min = -0.53f,
 		.throttle_trim = 0.0f,
 		.throttle_trim_adjusted = 0.f,
 		.throttle_max = 1.0f,
@@ -718,6 +726,13 @@ private:
 		.load_factor_correction = 0.0f,
 		.load_factor = 1.0f,
 	};
+
+	uORB::Publication<custom_tecs_setpoint_s>			_custom_tecs_setpoint_pub{ORB_ID(custom_tecs_setpoint)};
+	struct custom_tecs_setpoint_s _custom_tecs_setpoint;
+
+	uORB::Subscription _custom_sync_setpoint_sub{ORB_ID(custom_sync_setpoint)};
+	struct custom_sync_setpoint_s _custom_sync_setpoint;
+
 
 	TECSControl::Flag _control_flag{
 		.airspeed_enabled = false,

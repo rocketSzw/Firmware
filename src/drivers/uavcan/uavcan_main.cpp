@@ -56,6 +56,7 @@
 #include <arch/chip/chip.h>
 
 #include <uORB/topics/esc_status.h>
+#include <uORB/topics/custom_message.h>
 
 #include <drivers/drv_hrt.h>
 
@@ -103,8 +104,9 @@ UavcanNode::UavcanNode(uavcan::ICanDriver &can_driver, uavcan::ISystemClock &sys
 		std::abort();
 	}
 
-	_mixing_interface_esc.mixingOutput().setMaxTopicUpdateRate(1000000 / UavcanEscController::MAX_RATE_HZ);
-	_mixing_interface_servo.mixingOutput().setMaxTopicUpdateRate(1000000 / UavcanServoController::MAX_RATE_HZ);
+
+	//_mixing_interface_esc.mixingOutput().setMaxTopicUpdateRate(1000000 / UavcanEscController::MAX_RATE_HZ);
+	//_mixing_interface_servo.mixingOutput().setMaxTopicUpdateRate(1000000 / UavcanServoController::MAX_RATE_HZ);
 }
 
 UavcanNode::~UavcanNode()
@@ -402,6 +404,8 @@ UavcanNode::update_params()
 int
 UavcanNode::start(uavcan::NodeID node_id, uint32_t bitrate)
 {
+	PX4_INFO("entered UavcanNode::start");
+
 	if (_instance != nullptr) {
 		PX4_WARN("Already started");
 		return -1;
@@ -429,8 +433,8 @@ UavcanNode::start(uavcan::NodeID node_id, uint32_t bitrate)
 	}
 
 	_instance->ScheduleOnInterval(ScheduleIntervalMs * 1000);
-	_instance->_mixing_interface_esc.ScheduleNow();
-	_instance->_mixing_interface_servo.ScheduleNow();
+	// _instance->_mixing_interface_esc.ScheduleNow();
+	// _instance->_mixing_interface_servo.ScheduleNow();
 
 	return OK;
 }
@@ -467,6 +471,13 @@ UavcanNode::busevent_signal_trampoline()
 		_instance->ScheduleNow();
 	}
 }
+
+bool _is_vtol_type = VTOL_MASTER;
+// bool _is_vtol_type = VTOL_SLAVE;
+
+// bool _is_sync_type = SYNC_ATTITUDE;
+bool _is_sync_type = SYNC_VEL_ACC;
+bool _is_sync_type_yaw_unlock = FALSE;
 
 int
 UavcanNode::init(uavcan::NodeID node_id, UAVCAN_DRIVER::BusEvent &bus_events)
@@ -559,7 +570,7 @@ UavcanNode::init(uavcan::NodeID node_id, UAVCAN_DRIVER::BusEvent &bus_events)
 		return -EINVAL;
 	}
 
-	_mixing_interface_esc.mixingOutput().setAllDisarmedValues(UavcanEscController::DISARMED_OUTPUT_VALUE);
+	// _mixing_interface_esc.mixingOutput().setAllDisarmedValues(UavcanEscController::DISARMED_OUTPUT_VALUE);
 
 	/* Set up shared service clients */
 	_param_getset_client.setCallback(GetSetCallback(this, &UavcanNode::cb_getset));
@@ -585,6 +596,8 @@ UavcanNode::init(uavcan::NodeID node_id, UAVCAN_DRIVER::BusEvent &bus_events)
 	// Start the Node
 	return _node.start();
 }
+
+float uavcaninfo[35]={0};
 
 void
 UavcanNode::handle_time_sync(const uavcan::TimerEvent &)
@@ -623,7 +636,249 @@ UavcanNode::handle_time_sync(const uavcan::TimerEvent &)
 	 * Publish the sync message now, even if we're not a higher priority master.
 	 * Other nodes will be able to pick the right master anyway.
 	 */
-	_time_sync_master.publish();
+
+	if(_is_vtol_type == VTOL_MASTER) {
+
+		// if (_is_sync_type == SYNC_ATTITUDE){
+		// 	if (_mc_virtual_attitude_setpoint_sub.update(&_mc_virtual)) {
+		// 		uavcaninfo[0]=_custom_sync_setpoint.mc_virtual_roll_sp=_mc_virtual.roll_body;
+		// 		uavcaninfo[1]=_custom_sync_setpoint.mc_virtual_pitch_sp=_mc_virtual.pitch_body;
+		// 		uavcaninfo[2]=_custom_sync_setpoint.mc_virtual_yaw_sp=_mc_virtual.yaw_body;
+		// 		uavcaninfo[3]=_custom_sync_setpoint.mc_virtual_yawspeed_sp=_mc_virtual.yaw_sp_move_rate;
+		// 		uavcaninfo[4]=_custom_sync_setpoint.mc_virtual_qd[0]=_mc_virtual.q_d[0];
+		// 		uavcaninfo[5]=_custom_sync_setpoint.mc_virtual_qd[1]=_mc_virtual.q_d[1];
+		// 		uavcaninfo[6]=_custom_sync_setpoint.mc_virtual_qd[2]=_mc_virtual.q_d[2];
+		// 		uavcaninfo[7]=_custom_sync_setpoint.mc_virtual_qd[3]=_mc_virtual.q_d[3];
+		// 		uavcaninfo[8]=_custom_sync_setpoint.mc_reset_integral=_mc_virtual.reset_integral;
+		// 		uavcaninfo[9]=_custom_sync_setpoint.mc_fw_control_yaw_wheel=_mc_virtual.fw_control_yaw_wheel;
+		// 	}
+
+		// 	if (_custom_fw_setpoint_sub.update(&uavcan_custom_fw_setpoint)) {
+		// 		uavcaninfo[10]=_custom_sync_setpoint.fw_roll_sp = uavcan_custom_fw_setpoint.fw_sync_roll_sp;
+		// 		uavcaninfo[11]=_custom_sync_setpoint.fw_yaw_sp = uavcan_custom_fw_setpoint.fw_sync_yaw_sp;
+		// 		uavcaninfo[12]=_custom_sync_setpoint.fw_altitude = uavcan_custom_fw_setpoint.fw_sync_altitude;
+		// 		uavcaninfo[13]=_custom_sync_setpoint.fw_altitude_sp =uavcan_custom_fw_setpoint.fw_sync_altitude_sp;
+		// 		uavcaninfo[14]=_custom_sync_setpoint.fw_altitude_rate_sp =uavcan_custom_fw_setpoint.fw_sync_altitude_rate_sp;
+		// 		uavcaninfo[15]=_custom_sync_setpoint.fw_altitude_rate_sp_direct=uavcan_custom_fw_setpoint.fw_sync_altitude_rate_sp_direct;
+		// 		uavcaninfo[16]=_custom_sync_setpoint.fw_tas_sp =uavcan_custom_fw_setpoint.fw_sync_tas_setpoint;
+		// 		uavcaninfo[17]=_custom_sync_setpoint.fw_preserve1=uavcan_custom_fw_setpoint.fw_preserve1;	// pitch sp
+		// 		uavcaninfo[18]=_custom_sync_setpoint.fw_preserve2=uavcan_custom_fw_setpoint.fw_preserve2;	// yawrate sp
+		// 		uavcaninfo[19]=_custom_sync_setpoint.fw_preserve3=0;
+		// 	}
+		// }
+
+		//sync vel and acc sp, uncomment when use.
+		if (_is_sync_type == SYNC_VEL_ACC){
+			if (_vehicle_custom_vel_acc_setpoint_sub.update(&uavcan_custom_vel_acc_setpoint)) {
+				uavcaninfo[0]=_custom_sync_setpoint.mc_virtual_roll_sp=uavcan_custom_vel_acc_setpoint.vel_sp_1;
+				uavcaninfo[1]=_custom_sync_setpoint.mc_virtual_pitch_sp=uavcan_custom_vel_acc_setpoint.vel_sp_2;
+				uavcaninfo[2]=_custom_sync_setpoint.mc_virtual_yaw_sp=uavcan_custom_vel_acc_setpoint.vel_sp_3;
+				uavcaninfo[3]=_custom_sync_setpoint.mc_virtual_yawspeed_sp=uavcan_custom_vel_acc_setpoint.acc_sp_1;
+				uavcaninfo[4]=_custom_sync_setpoint.mc_virtual_qd[0]=uavcan_custom_vel_acc_setpoint.acc_sp_2;
+				uavcaninfo[5]=_custom_sync_setpoint.mc_virtual_qd[1]=uavcan_custom_vel_acc_setpoint.acc_sp_3;
+				uavcaninfo[6]=_custom_sync_setpoint.mc_virtual_qd[2]=uavcan_custom_vel_acc_setpoint.yaw_sp;
+				uavcaninfo[7]=_custom_sync_setpoint.mc_virtual_qd[3]=uavcan_custom_vel_acc_setpoint.yawspeed_sp;;
+				uavcaninfo[8]=_custom_sync_setpoint.mc_reset_integral=0;
+				uavcaninfo[9]=_custom_sync_setpoint.mc_fw_control_yaw_wheel=0;
+			}
+
+			if (_custom_fw_setpoint_sub.update(&uavcan_custom_fw_setpoint)) {
+				uavcaninfo[10]=_custom_sync_setpoint.fw_roll_sp = uavcan_custom_fw_setpoint.fw_sync_roll_sp;
+				uavcaninfo[11]=_custom_sync_setpoint.fw_yaw_sp = uavcan_custom_fw_setpoint.fw_sync_yaw_sp;
+				uavcaninfo[12]=_custom_sync_setpoint.fw_altitude = uavcan_custom_fw_setpoint.fw_sync_altitude;
+				uavcaninfo[13]=_custom_sync_setpoint.fw_altitude_sp =uavcan_custom_fw_setpoint.fw_sync_altitude_sp;
+				uavcaninfo[14]=_custom_sync_setpoint.fw_altitude_rate_sp =uavcan_custom_fw_setpoint.fw_sync_altitude_rate_sp;
+				uavcaninfo[15]=_custom_sync_setpoint.fw_altitude_rate_sp_direct=uavcan_custom_fw_setpoint.fw_sync_altitude_rate_sp_direct;
+				uavcaninfo[16]=_custom_sync_setpoint.fw_tas_sp =uavcan_custom_fw_setpoint.fw_sync_tas_setpoint;
+				uavcaninfo[17]=_custom_sync_setpoint.fw_preserve1=uavcan_custom_fw_setpoint.fw_preserve1;	// fw pitch sp
+				uavcaninfo[18]=_custom_sync_setpoint.fw_preserve2=uavcan_custom_fw_setpoint.fw_preserve2;	// fw yawrate sp
+			}
+
+			uavcaninfo[19]=_custom_sync_setpoint.fw_preserve3=_is_sync_type_yaw_unlock;
+		}
+
+		// sync commands for transition
+		if (_vehicle_transition_sub.update(&_vehicle_transition)) {
+			uavcaninfo[20]=_custom_sync_setpoint.custom_sync_is_fixed_wing_requested=_vehicle_transition.sync_is_fixed_wing_requested;
+			uavcaninfo[21]=_custom_sync_setpoint.custom_sync_is_transition_p1_to_p2=_vehicle_transition.sync_is_transition_p1_to_p2;
+			uavcaninfo[22]=_custom_sync_setpoint.custom_sync_exit_backtransition=_vehicle_transition.sync_exit_backtransition;
+		}
+
+		// used to indicate if the master-slave communication is successful
+		// monitor the custom_message mavlink message on the slave aircraft, should see q1 changing w.r.t. the attitude from the master aircraft.
+		if (_vehicle_attitude_sub.update(&_vehicle_att)) {
+			uavcaninfo[23]=_vehicle_att.q[1];
+		}
+
+		// used to sync the yawspeed command, as on master, this is the final yawspeed command, which could override the command from the attitude control loop
+		if (_vehicle_rates_setpoint_sub.update(&_vehicle_rates_sp)) {
+			uavcaninfo[24]=_custom_sync_setpoint.yawrate_sp_from_rates_ctrl=_vehicle_rates_sp.yaw;
+		}
+
+		//used to sync when yaw lock
+		if (_is_sync_type_yaw_unlock == TRUE){
+			if (_mc_virtual_attitude_setpoint_sub.update(&_mc_virtual)) {
+				uavcaninfo[25]=_custom_sync_setpoint.yaw_unlock_sync_1=_mc_virtual.roll_body;
+				uavcaninfo[26]=_custom_sync_setpoint.yaw_unlock_sync_2=_mc_virtual.pitch_body;
+				uavcaninfo[27]=_custom_sync_setpoint.yaw_unlock_sync_3=_mc_virtual.yaw_body;
+				uavcaninfo[28]=_custom_sync_setpoint.yaw_unlock_sync_4=_mc_virtual.yaw_sp_move_rate;
+				uavcaninfo[29]=_custom_sync_setpoint.yaw_unlock_sync_5=_mc_virtual.q_d[0];
+				uavcaninfo[30]=_custom_sync_setpoint.yaw_unlock_sync_6=_mc_virtual.q_d[1];
+				uavcaninfo[31]=_custom_sync_setpoint.yaw_unlock_sync_7=_mc_virtual.q_d[2];
+				uavcaninfo[32]=_custom_sync_setpoint.yaw_unlock_sync_8=_mc_virtual.q_d[3];
+				uavcaninfo[33]=_custom_sync_setpoint.yaw_unlock_sync_9=_mc_virtual.reset_integral;
+				uavcaninfo[34]=_custom_sync_setpoint.yaw_unlock_sync_10=_mc_virtual.fw_control_yaw_wheel;
+			}
+		}
+		else {
+			uavcaninfo[25]=_custom_sync_setpoint.yaw_unlock_sync_1=0;
+			uavcaninfo[26]=_custom_sync_setpoint.yaw_unlock_sync_2=0;
+			uavcaninfo[27]=_custom_sync_setpoint.yaw_unlock_sync_3=0;
+			uavcaninfo[28]=_custom_sync_setpoint.yaw_unlock_sync_4=0;
+			uavcaninfo[29]=_custom_sync_setpoint.yaw_unlock_sync_5=0;
+			uavcaninfo[30]=_custom_sync_setpoint.yaw_unlock_sync_6=0;
+			uavcaninfo[31]=_custom_sync_setpoint.yaw_unlock_sync_7=0;
+			uavcaninfo[32]=_custom_sync_setpoint.yaw_unlock_sync_8=0;
+			uavcaninfo[33]=_custom_sync_setpoint.yaw_unlock_sync_9=0;
+			uavcaninfo[34]=_custom_sync_setpoint.yaw_unlock_sync_10=0;
+		}
+
+		_time_sync_master.publish(uavcaninfo);
+
+		// publish custom message
+		uavcan_custom_message.timestamp = hrt_absolute_time();
+		uavcan_custom_message.roll_sp = uavcaninfo[23];
+		uavcan_custom_message.pitch_sp = 0.0f;
+		uavcan_custom_message.yaw_sp = 0.0f;
+		uavcan_custom_message.rollrate_sp = 0.0f;
+		uavcan_custom_message.pitchrate_sp = 0.0f;
+		uavcan_custom_message.yawrate_sp = 0.0f;
+		uavcan_custom_message.msg_1 = _custom_sync_setpoint.custom_sync_is_fixed_wing_requested;
+		uavcan_custom_message.msg_2 = _custom_sync_setpoint.custom_sync_is_transition_p1_to_p2;
+		uavcan_custom_message.msg_3 = _custom_sync_setpoint.custom_sync_exit_backtransition;
+		uavcan_custom_message.msg_4 = 4.0f;
+		uavcan_custom_message.msg_5 = _custom_sync_setpoint.fw_roll_sp;
+		uavcan_custom_message.msg_6 = _custom_sync_setpoint.fw_preserve1;
+		uavcan_custom_message.msg_7 = _custom_sync_setpoint.fw_preserve2;
+		uavcan_custom_message.msg_8 = 8.0f;
+		uavcan_custom_message.msg_9 = _custom_sync_setpoint.fw_preserve3;
+		uavcan_custom_message.msg_10 = _is_vtol_type;
+		_custom_message_pub.publish(uavcan_custom_message);
+
+		// publish custom sync setpoints
+		_custom_sync_setpoint.timestamp = hrt_absolute_time();
+		_custom_sync_setpoint_pub.publish(_custom_sync_setpoint);
+
+	} else {	//SLAVE
+		// if (_is_sync_type == SYNC_ATTITUDE){
+		// 	//receive uavcan message and publish as uorb messages
+		// 	_custom_sync_setpoint.timestamp = hrt_absolute_time();
+		// 	_custom_sync_setpoint.mc_virtual_roll_sp = _time_sync_slave.uavcan_mc_roll_sp;
+		// 	_custom_sync_setpoint.mc_virtual_pitch_sp = _time_sync_slave.uavcan_mc_pitch_sp;
+		// 	_custom_sync_setpoint.mc_virtual_yaw_sp = _time_sync_slave.uavcan_mc_yaw_sp;
+		// 	_custom_sync_setpoint.mc_virtual_yawspeed_sp = _time_sync_slave.uavcan_mc_yawrate_sp;
+		// 	_custom_sync_setpoint.mc_virtual_qd[0] = _time_sync_slave.uavcan_mc_qd[0];
+		// 	_custom_sync_setpoint.mc_virtual_qd[1] = _time_sync_slave.uavcan_mc_qd[1];
+		// 	_custom_sync_setpoint.mc_virtual_qd[2] = _time_sync_slave.uavcan_mc_qd[2];
+		// 	_custom_sync_setpoint.mc_virtual_qd[3] = _time_sync_slave.uavcan_mc_qd[3];
+		// 	_custom_sync_setpoint.mc_reset_integral = _time_sync_slave.uavcan_mc_reset_integral;
+		// 	_custom_sync_setpoint.mc_fw_control_yaw_wheel = _time_sync_slave.uavcan_mc_fw_control_yaw_wheel;
+
+		// 	_custom_sync_setpoint.fw_roll_sp = _time_sync_slave.uavcan_fw_roll_sp;
+		// 	_custom_sync_setpoint.fw_yaw_sp = _time_sync_slave.uavcan_fw_yaw_sp;
+		// 	_custom_sync_setpoint.fw_altitude = _time_sync_slave.uavcan_fw_altitude;
+		// 	_custom_sync_setpoint.fw_altitude_sp = _time_sync_slave.uavcan_fw_altitude_sp;
+		// 	_custom_sync_setpoint.fw_altitude_rate_sp = _time_sync_slave.uavcan_fw_altitude_rate_sp;
+		// 	_custom_sync_setpoint.fw_altitude_rate_sp_direct = _time_sync_slave.uavcan_fw_altitude_rate_sp_direct;
+		// 	_custom_sync_setpoint.fw_tas_sp = _time_sync_slave.uavcan_fw_tas_sp;
+		// 	_custom_sync_setpoint.fw_preserve1 = _time_sync_slave.uavcan_fw_preserve1;
+		// 	_custom_sync_setpoint.fw_preserve2 = _time_sync_slave.uavcan_fw_preserve2;
+		// 	_custom_sync_setpoint.fw_preserve3 = _time_sync_slave.uavcan_fw_preserve3;
+		// }
+
+		if (_is_sync_type == SYNC_VEL_ACC){
+			_custom_sync_setpoint.timestamp = hrt_absolute_time();
+			_custom_sync_setpoint.mc_virtual_roll_sp = _time_sync_slave.uavcan_mc_roll_sp;
+			_custom_sync_setpoint.mc_virtual_pitch_sp = _time_sync_slave.uavcan_mc_pitch_sp;
+			_custom_sync_setpoint.mc_virtual_yaw_sp = _time_sync_slave.uavcan_mc_yaw_sp;
+			_custom_sync_setpoint.mc_virtual_yawspeed_sp = _time_sync_slave.uavcan_mc_yawrate_sp;
+			_custom_sync_setpoint.mc_virtual_qd[0] = _time_sync_slave.uavcan_mc_qd[0];
+			_custom_sync_setpoint.mc_virtual_qd[1] = _time_sync_slave.uavcan_mc_qd[1];
+			_custom_sync_setpoint.mc_virtual_qd[2] = _time_sync_slave.uavcan_mc_qd[2];;
+			_custom_sync_setpoint.mc_virtual_qd[3] = _time_sync_slave.uavcan_mc_qd[3];;
+			_custom_sync_setpoint.mc_reset_integral = 0;
+			_custom_sync_setpoint.mc_fw_control_yaw_wheel = 0;
+
+			_custom_sync_setpoint.fw_roll_sp = _time_sync_slave.uavcan_fw_roll_sp;
+			_custom_sync_setpoint.fw_yaw_sp = _time_sync_slave.uavcan_fw_yaw_sp;
+			_custom_sync_setpoint.fw_altitude = _time_sync_slave.uavcan_fw_altitude;
+			_custom_sync_setpoint.fw_altitude_sp = _time_sync_slave.uavcan_fw_altitude_sp;
+			_custom_sync_setpoint.fw_altitude_rate_sp = _time_sync_slave.uavcan_fw_altitude_rate_sp;
+			_custom_sync_setpoint.fw_altitude_rate_sp_direct = _time_sync_slave.uavcan_fw_altitude_rate_sp_direct;
+			_custom_sync_setpoint.fw_tas_sp = _time_sync_slave.uavcan_fw_tas_sp;
+			_custom_sync_setpoint.fw_preserve1 = _time_sync_slave.uavcan_fw_preserve1;
+			_custom_sync_setpoint.fw_preserve2 = _time_sync_slave.uavcan_fw_preserve2;
+			_custom_sync_setpoint.fw_preserve3 = _time_sync_slave.uavcan_fw_preserve3;
+
+			if(_time_sync_slave.uavcan_fw_preserve3>=0.5f){
+				_is_sync_type_yaw_unlock = TRUE;
+			} else {
+				_is_sync_type_yaw_unlock = FALSE;
+			}
+		}
+
+		_custom_sync_setpoint.custom_sync_is_fixed_wing_requested = _time_sync_slave.uavcan_sync_is_fixed_wing_requested;
+		_custom_sync_setpoint.custom_sync_is_transition_p1_to_p2 = _time_sync_slave.uavcan_sync_is_transition_p1_to_p2;
+		_custom_sync_setpoint.custom_sync_exit_backtransition = _time_sync_slave.uavcan_sync_exit_backtransition;
+
+		//
+		if(_is_sync_type_yaw_unlock==TRUE) {
+			_custom_sync_setpoint.yaw_unlock_sync_1 = _time_sync_slave.uavcan_yaw_unlock_sync_1;
+			_custom_sync_setpoint.yaw_unlock_sync_2 = _time_sync_slave.uavcan_yaw_unlock_sync_2;
+			_custom_sync_setpoint.yaw_unlock_sync_3 = _time_sync_slave.uavcan_yaw_unlock_sync_3;
+			_custom_sync_setpoint.yaw_unlock_sync_4 = _time_sync_slave.uavcan_yaw_unlock_sync_4;
+			_custom_sync_setpoint.yaw_unlock_sync_5 = _time_sync_slave.uavcan_yaw_unlock_sync_5;
+			_custom_sync_setpoint.yaw_unlock_sync_6 = _time_sync_slave.uavcan_yaw_unlock_sync_6;
+			_custom_sync_setpoint.yaw_unlock_sync_7 = _time_sync_slave.uavcan_yaw_unlock_sync_7;
+			_custom_sync_setpoint.yaw_unlock_sync_8 = _time_sync_slave.uavcan_yaw_unlock_sync_8;
+			_custom_sync_setpoint.yaw_unlock_sync_9 = _time_sync_slave.uavcan_yaw_unlock_sync_9;
+			_custom_sync_setpoint.yaw_unlock_sync_10 = _time_sync_slave.uavcan_yaw_unlock_sync_10;
+		} else {
+			_custom_sync_setpoint.yaw_unlock_sync_1 = 0;
+			_custom_sync_setpoint.yaw_unlock_sync_2 = 0;
+			_custom_sync_setpoint.yaw_unlock_sync_3 = 0;
+			_custom_sync_setpoint.yaw_unlock_sync_4 = 0;
+			_custom_sync_setpoint.yaw_unlock_sync_5 = 0;
+			_custom_sync_setpoint.yaw_unlock_sync_6 = 0;
+			_custom_sync_setpoint.yaw_unlock_sync_7 = 0;
+			_custom_sync_setpoint.yaw_unlock_sync_8 = 0;
+			_custom_sync_setpoint.yaw_unlock_sync_9 = 0;
+			_custom_sync_setpoint.yaw_unlock_sync_10 = 0;
+		}
+
+		_custom_sync_setpoint.yawrate_sp_from_rates_ctrl = _time_sync_slave.uavcan_yawrates_sp_from_rates_ctrl;
+		_custom_sync_setpoint_pub.publish(_custom_sync_setpoint);
+
+		// publish custom message
+		uavcan_custom_message.timestamp = hrt_absolute_time();
+		uavcan_custom_message.roll_sp = _time_sync_slave.uavcan_q1;
+		uavcan_custom_message.pitch_sp = 0.0f;
+		uavcan_custom_message.yaw_sp = 0.0f;
+		uavcan_custom_message.rollrate_sp = 0.0f;
+		uavcan_custom_message.pitchrate_sp = 0.0f;
+		uavcan_custom_message.yawrate_sp = 0.0f;
+		uavcan_custom_message.msg_1 = _custom_sync_setpoint.custom_sync_is_fixed_wing_requested;
+		uavcan_custom_message.msg_2 = _custom_sync_setpoint.custom_sync_is_transition_p1_to_p2;
+		uavcan_custom_message.msg_3 = _custom_sync_setpoint.custom_sync_exit_backtransition;
+		uavcan_custom_message.msg_4 = 4.0f;
+		uavcan_custom_message.msg_5 = _custom_sync_setpoint.fw_roll_sp;
+		uavcan_custom_message.msg_6 = _custom_sync_setpoint.fw_preserve1;
+		uavcan_custom_message.msg_7 = _custom_sync_setpoint.fw_preserve2;
+		uavcan_custom_message.msg_8 = 8.0f;
+		uavcan_custom_message.msg_9 = _custom_sync_setpoint.fw_preserve3;
+		uavcan_custom_message.msg_10 = _is_vtol_type;
+		_custom_message_pub.publish(uavcan_custom_message);
+	}
 }
 
 void
@@ -675,10 +930,10 @@ UavcanNode::Run()
 		 * System RTC setting to the GPS) we would call UAVCAN_DRIVER::clock::setUtc() when that
 		 * happens, but for now we use adjustUtc with a correction of the hrt so that the
 		 * time bases are the same
-		 */
+		*/
 		UAVCAN_DRIVER::clock::adjustUtc(uavcan::UtcDuration::fromUSec(hrt_absolute_time()));
 		_master_timer.setCallback(TimerCallback(this, &UavcanNode::handle_time_sync));
-		_master_timer.startPeriodic(uavcan::MonotonicDuration::fromMSec(1000));
+		_master_timer.startPeriodic(uavcan::MonotonicDuration::fromMSec(10));
 
 		_node_status_monitor.start();
 		_node.setModeOperational();
@@ -1023,6 +1278,7 @@ UavcanNode::print_info()
 
 	printf("\n");
 
+
 	// Sensor bridges
 	for (const auto &br : _sensor_bridges) {
 		printf("Sensor '%s':\n", br->get_name());
@@ -1284,7 +1540,7 @@ extern "C" __EXPORT int uavcan_main(int argc, char *argv[])
 	if (!std::strcmp(argv[1], "start")) {
 		if (UavcanNode::instance()) {
 			// Already running, no error
-			PX4_INFO("already started");
+			PX4_INFO("already started!!");
 			::exit(0);
 		}
 

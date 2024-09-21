@@ -227,7 +227,6 @@ MulticopterAttitudeControl::Run()
 
 			if (_vehicle_attitude_setpoint_sub.copy(&vehicle_attitude_setpoint)
 			    && (vehicle_attitude_setpoint.timestamp > _last_attitude_setpoint)) {
-
 				_attitude_control.setAttitudeSetpoint(Quatf(vehicle_attitude_setpoint.q_d), vehicle_attitude_setpoint.yaw_sp_move_rate);
 				_thrust_setpoint_body = Vector3f(vehicle_attitude_setpoint.thrust_body);
 				_last_attitude_setpoint = vehicle_attitude_setpoint.timestamp;
@@ -318,6 +317,14 @@ MulticopterAttitudeControl::Run()
 			rates_setpoint.roll = rates_sp(0);
 			rates_setpoint.pitch = rates_sp(1);
 			rates_setpoint.yaw = rates_sp(2);
+			// the yawrate command for slave aircraft is overwritten to follow yawrate setpoint from master aircraft.
+			// where the yawrate command is derived in the rate control loop at master.
+
+			if (_is_vtol_type == VTOL_SLAVE) {
+				_custom_sync_setpoint_sub.update(&_custom_sync_setpoint);
+				rates_setpoint.yaw = _custom_sync_setpoint.yawrate_sp_from_rates_ctrl;
+			}
+
 			_thrust_setpoint_body.copyTo(rates_setpoint.thrust_body);
 			rates_setpoint.timestamp = hrt_absolute_time();
 
