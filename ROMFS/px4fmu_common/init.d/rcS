@@ -526,7 +526,7 @@ else
 	else
 		if param greater -s CYPHAL_ENABLE 0
 		then
-			cyphal start
+			#cyphal start
 		fi
 	fi
 

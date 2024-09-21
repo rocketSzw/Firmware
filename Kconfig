@@ -197,9 +197,9 @@ menu "systemcmds"
 source "src/systemcmds/Kconfig"
 endmenu
 
-menu "examples"
-source "src/examples/Kconfig"
-endmenu
+# menu "examples"
+# source "src/examples/Kconfig"
+# endmenu
 
 menu "platforms"
 depends on PLATFORM_QURT || PLATFORM_POSIX
