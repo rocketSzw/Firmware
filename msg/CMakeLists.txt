@@ -68,6 +68,7 @@ set(msg_files
 	CustomTecsSetpoint.msg
 	CustomFwAttControlInput.msg
 	CustomDebug.msg
+	CustomMavlinkInfo.msg
 	DebugArray.msg
 	DebugKeyValue.msg
 	DebugValue.msg

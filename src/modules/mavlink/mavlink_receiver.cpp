@@ -312,7 +312,9 @@ MavlinkReceiver::handle_message(mavlink_message_t *msg)
 	case MAVLINK_MSG_ID_GIMBAL_DEVICE_ATTITUDE_STATUS:
 		handle_message_gimbal_device_attitude_status(msg);
 		break;
-
+	case MAVLINK_MSG_ID_CUSTOM_MAVLINK_INFO:
+		handle_message_custom_mavlink_info(msg);
+		break;
 	default:
 		break;
 	}
@@ -3060,6 +3062,81 @@ MavlinkReceiver::handle_message_gimbal_device_attitude_status(mavlink_message_t 
 }
 
 void
+MavlinkReceiver::handle_message_custom_mavlink_info(mavlink_message_t *msg)
+{
+	if (_is_vtol_type != VTOL_SLAVE)
+	{
+		return;
+	}
+	// PX4_WARN( "bbbbbbbbbbbbbbbbbbbbbbbbbbb%d" ,_is_vtol_type);
+	mavlink_custom_mavlink_info_t custom_mavlink_info_msg;
+	mavlink_msg_custom_mavlink_info_decode(msg, &custom_mavlink_info_msg);
+
+	custom_sync_setpoint_s _custom_sync_setpoint;
+	if (_is_sync_type == SYNC_VEL_ACC){
+		_custom_sync_setpoint.timestamp = hrt_absolute_time();
+		_custom_sync_setpoint.mc_virtual_roll_sp = custom_mavlink_info_msg.mavlink_info[0];
+		_custom_sync_setpoint.mc_virtual_pitch_sp = custom_mavlink_info_msg.mavlink_info[1];
+		_custom_sync_setpoint.mc_virtual_yaw_sp = custom_mavlink_info_msg.mavlink_info[2];
+		_custom_sync_setpoint.mc_virtual_yawspeed_sp = custom_mavlink_info_msg.mavlink_info[3];
+		_custom_sync_setpoint.mc_virtual_qd[0] = custom_mavlink_info_msg.mavlink_info[4];
+		_custom_sync_setpoint.mc_virtual_qd[1] = custom_mavlink_info_msg.mavlink_info[5];
+		_custom_sync_setpoint.mc_virtual_qd[2] = custom_mavlink_info_msg.mavlink_info[6];
+		_custom_sync_setpoint.mc_virtual_qd[3] = custom_mavlink_info_msg.mavlink_info[7];
+		_custom_sync_setpoint.mc_reset_integral = 0;
+		_custom_sync_setpoint.mc_fw_control_yaw_wheel = 0;
+
+		_custom_sync_setpoint.fw_roll_sp = custom_mavlink_info_msg.mavlink_info[10];
+		_custom_sync_setpoint.fw_yaw_sp = custom_mavlink_info_msg.mavlink_info[11];
+		_custom_sync_setpoint.fw_altitude = custom_mavlink_info_msg.mavlink_info[12];
+		_custom_sync_setpoint.fw_altitude_sp = custom_mavlink_info_msg.mavlink_info[13];
+		_custom_sync_setpoint.fw_altitude_rate_sp = custom_mavlink_info_msg.mavlink_info[14];
+		_custom_sync_setpoint.fw_altitude_rate_sp_direct = custom_mavlink_info_msg.mavlink_info[15];
+		_custom_sync_setpoint.fw_tas_sp = custom_mavlink_info_msg.mavlink_info[16];
+		_custom_sync_setpoint.fw_preserve1 = custom_mavlink_info_msg.mavlink_info[17];
+		_custom_sync_setpoint.fw_preserve2 = custom_mavlink_info_msg.mavlink_info[18];
+		_custom_sync_setpoint.fw_preserve3 = custom_mavlink_info_msg.mavlink_info[19];
+
+		if(custom_mavlink_info_msg.mavlink_info[19]>=0.5f){
+			_is_sync_type_yaw_unlock = TRUE;
+		} else {
+			_is_sync_type_yaw_unlock = FALSE;
+		}
+	}
+
+	_custom_sync_setpoint.custom_sync_is_fixed_wing_requested = custom_mavlink_info_msg.mavlink_info[20];
+	_custom_sync_setpoint.custom_sync_is_transition_p1_to_p2 = custom_mavlink_info_msg.mavlink_info[21];
+	_custom_sync_setpoint.custom_sync_exit_backtransition = custom_mavlink_info_msg.mavlink_info[22];
+
+	//
+	if(_is_sync_type_yaw_unlock==TRUE) {
+		_custom_sync_setpoint.yaw_unlock_sync_1 = custom_mavlink_info_msg.mavlink_info[25];
+		_custom_sync_setpoint.yaw_unlock_sync_2 = custom_mavlink_info_msg.mavlink_info[26];
+		_custom_sync_setpoint.yaw_unlock_sync_3 = custom_mavlink_info_msg.mavlink_info[27];
+		_custom_sync_setpoint.yaw_unlock_sync_4 = custom_mavlink_info_msg.mavlink_info[28];
+		_custom_sync_setpoint.yaw_unlock_sync_5 = custom_mavlink_info_msg.mavlink_info[29];
+		_custom_sync_setpoint.yaw_unlock_sync_6 = custom_mavlink_info_msg.mavlink_info[30];
+		_custom_sync_setpoint.yaw_unlock_sync_7 = custom_mavlink_info_msg.mavlink_info[31];
+		_custom_sync_setpoint.yaw_unlock_sync_8 = custom_mavlink_info_msg.mavlink_info[32];
+		_custom_sync_setpoint.yaw_unlock_sync_9 = custom_mavlink_info_msg.mavlink_info[33];
+		_custom_sync_setpoint.yaw_unlock_sync_10 = custom_mavlink_info_msg.mavlink_info[34];
+	} else {
+		_custom_sync_setpoint.yaw_unlock_sync_1 = 0;
+		_custom_sync_setpoint.yaw_unlock_sync_2 = 0;
+		_custom_sync_setpoint.yaw_unlock_sync_3 = 0;
+		_custom_sync_setpoint.yaw_unlock_sync_4 = 0;
+		_custom_sync_setpoint.yaw_unlock_sync_5 = 0;
+		_custom_sync_setpoint.yaw_unlock_sync_6 = 0;
+		_custom_sync_setpoint.yaw_unlock_sync_7 = 0;
+		_custom_sync_setpoint.yaw_unlock_sync_8 = 0;
+		_custom_sync_setpoint.yaw_unlock_sync_9 = 0;
+		_custom_sync_setpoint.yaw_unlock_sync_10 = 0;
+	}
+
+	_custom_sync_setpoint.yawrate_sp_from_rates_ctrl =custom_mavlink_info_msg.mavlink_info[24];
+	_custom_sync_setpoint_pub.publish(_custom_sync_setpoint);
+}
+void
 MavlinkReceiver::run()
 {
 	/* set thread name */
@@ -3163,7 +3240,6 @@ MavlinkReceiver::run()
 			// only start accepting messages on UDP once we're sure who we talk to
 			if (_mavlink->get_protocol() != Protocol::UDP || _mavlink->get_client_source_initialized()) {
 #endif // MAVLINK_UDP
-
 				/* if read failed, this loop won't execute */
 				for (ssize_t i = 0; i < nread; i++) {
 					if (mavlink_parse_char(_mavlink->get_channel(), buf[i], &msg, &_status)) {
