@@ -60,7 +60,7 @@
 #include <uORB/topics/vehicle_angular_velocity.h>
 #include <uORB/topics/vehicle_attitude.h>
 #include <uORB/topics/vehicle_attitude_setpoint.h>
-#include <drivers/uavcan/master_slave.hpp>
+#include <modules/master_slave/master_slave.h>
 #include <uORB/topics/vehicle_control_mode.h>
 #include <uORB/topics/vehicle_local_position.h>
 #include <uORB/topics/vehicle_land_detected.h>
@@ -71,7 +71,7 @@
 #include <uORB/topics/custom_fw_setpoint.h>
 #include <uORB/topics/custom_sync_setpoint.h>
 #include <uORB/topics/custom_fw_att_control_input.h>
-#include <drivers/uavcan/master_slave.hpp>
+#include <modules/master_slave/master_slave.h>
 
 using matrix::Eulerf;
 using matrix::Quatf;

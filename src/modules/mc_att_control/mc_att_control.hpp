@@ -54,9 +54,9 @@
 #include <uORB/topics/vehicle_rates_setpoint.h>
 #include <uORB/topics/vehicle_status.h>
 #include <uORB/topics/custom_sync_setpoint.h>
-#include <drivers/uavcan/master_slave.hpp>
+#include <modules/master_slave/master_slave.h>
 #include <lib/mathlib/math/filter/AlphaFilter.hpp>
-#include <drivers/uavcan/master_slave.hpp>
+#include <modules/master_slave/master_slave.h>
 
 #include <AttitudeControl.hpp>
 

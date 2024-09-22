@@ -472,13 +472,6 @@ UavcanNode::busevent_signal_trampoline()
 	}
 }
 
-bool _is_vtol_type = VTOL_MASTER;
-// bool _is_vtol_type = VTOL_SLAVE;
-
-// bool _is_sync_type = SYNC_ATTITUDE;
-bool _is_sync_type = SYNC_VEL_ACC;
-bool _is_sync_type_yaw_unlock = FALSE;
-
 int
 UavcanNode::init(uavcan::NodeID node_id, UAVCAN_DRIVER::BusEvent &bus_events)
 {

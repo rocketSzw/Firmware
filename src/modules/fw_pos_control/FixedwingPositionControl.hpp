@@ -96,7 +96,7 @@
 #include <uORB/topics/custom_message.h>
 #include <uORB/topics/orbit_status.h>
 #include <uORB/uORB.h>
-#include <drivers/uavcan/master_slave.hpp>
+#include <modules/master_slave/master_slave.h>
 
 using namespace launchdetection;
 using namespace runwaytakeoff;

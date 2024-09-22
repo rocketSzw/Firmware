@@ -1,20 +1,20 @@
 /****************************************************************************
  *
- *   Copyright (c) 2014-2022 PX4 Development Team. All rights reserved.
+ *   Copyright (c) 2018 PX4 Development Team. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
  *
  * 1. Redistributions of source code must retain the above copyright
- *	notice, this list of conditions and the following disclaimer.
+ *    notice, this list of conditions and the following disclaimer.
  * 2. Redistributions in binary form must reproduce the above copyright
- *	notice, this list of conditions and the following disclaimer in
- *	the documentation and/or other materials provided with the
- *	distribution.
+ *    notice, this list of conditions and the following disclaimer in
+ *    the documentation and/or other materials provided with the
+ *    distribution.
  * 3. Neither the name PX4 nor the names of its contributors may be
- *	used to endorse or promote products derived from this software
- *	without specific prior written permission.
+ *    used to endorse or promote products derived from this software
+ *    without specific prior written permission.
  *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
  * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
@@ -31,28 +31,14 @@
  *
  ****************************************************************************/
 
-/**
- * @file uavcan_main.hpp
- *
- * Defines basic functinality of UAVCAN node.
- *
- * @author Pavel Kirienko <pavel.kirienko@gmail.com>
- *		 Andreas Jochum <Andreas@NicaDrone.com>
- */
+#include "master_slave.h"
+bool _is_vtol_type = VTOL_MASTER;
+// bool _is_vtol_type = VTOL_SLAVE;
 
-// #pragma once
-#ifndef _MASTER_SLAVE_HPP
-#define _MASTER_SLAVE_HPP
-
-extern bool _is_vtol_type;
-extern bool flag_receive_updated;
-extern bool _is_sync_type;
-extern bool _is_sync_type_yaw_unlock;
-
-#define VTOL_MASTER 	1
-#define VTOL_SLAVE	0
-
-#define SYNC_ATTITUDE 	1
-#define SYNC_VEL_ACC	0
-
-#endif
+// bool _is_sync_type = SYNC_ATTITUDE;
+bool _is_sync_type = SYNC_VEL_ACC;
+bool _is_sync_type_yaw_unlock = FALSE;
+int master_slave_main(int argc, char *argv[])
+{
+	return 0;
+}

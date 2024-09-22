@@ -41,7 +41,7 @@
 #include <mathlib/mathlib.h>
 #include <px4_platform_common/defines.h>
 #include <geo/geo.h>
-#include <drivers/uavcan/master_slave.hpp>
+#include <modules/master_slave/master_slave.h>
 
 using namespace matrix;
 

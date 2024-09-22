@@ -86,7 +86,7 @@
 #include <uORB/topics/vehicle_torque_setpoint.h>
 #include <uORB/topics/custom_message.h>
 #include <uORB/topics/custom_transition.h>
-#include <drivers/uavcan/master_slave.hpp>
+#include <modules/master_slave/master_slave.h>
 //#include "standard.h"
 //#include "tailsitter.h"
 #include "tiltrotor.h"

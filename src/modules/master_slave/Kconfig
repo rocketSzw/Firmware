@@ -1,0 +1,5 @@
+menuconfig MODULES_MASTER_SLAVE
+	bool "master_slave"
+	default n
+	---help---
+		Enable support for master_slave

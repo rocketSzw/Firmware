@@ -58,7 +58,7 @@
 #include "sensors/sensor_bridge.hpp"
 #include "uavcan_driver.hpp"
 #include "uavcan_servers.hpp"
-#include "master_slave.hpp"
+#include <modules/master_slave/master_slave.h>
 
 #include <lib/drivers/device/Device.hpp>
 #include <lib/mixer_module/mixer_module.hpp>

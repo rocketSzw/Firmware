@@ -66,7 +66,7 @@
 #include <uORB/topics/vehicle_local_position_setpoint.h>
 #include <uORB/topics/custom_sync_setpoint.h>
 #include <uORB/topics/custom_vel_acc_setpoint.h>
-#include <drivers/uavcan/master_slave.hpp>
+#include <modules/master_slave/master_slave.h>
 
 
 using namespace time_literals;

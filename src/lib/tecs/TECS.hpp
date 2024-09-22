@@ -51,7 +51,7 @@
 #include <motion_planning/VelocitySmoothing.hpp>
 #include <motion_planning/ManualVelocitySmoothingZ.hpp>
 #include <uORB/topics/custom_tecs_setpoint.h>
-#include <drivers/uavcan/master_slave.hpp>
+#include <modules/master_slave/master_slave.h>
 #include <uORB/topics/custom_sync_setpoint.h>
 
 class TECSAirspeedFilter

@@ -37,7 +37,7 @@
 #include "FlightTaskAuto.hpp"
 #include <mathlib/mathlib.h>
 #include <float.h>
-#include <drivers/uavcan/master_slave.hpp>
+#include <modules/master_slave/master_slave.h>
 
 using namespace matrix;
 

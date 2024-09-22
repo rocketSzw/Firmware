@@ -39,7 +39,7 @@
 #include <float.h>
 #include <mathlib/mathlib.h>
 #include <geo/geo.h>
-#include <drivers/uavcan/master_slave.hpp>
+#include <modules/master_slave/master_slave.h>
 
 
 using namespace matrix;
