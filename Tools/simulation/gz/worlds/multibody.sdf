@@ -149,7 +149,7 @@
     <include>
       <uri>model://generic_tiltrotor_vtol/model.sdf</uri>
       <name>generic_tiltrotor_vtol_0</name>
-      <pose>0 2.1 0.2 0 0 0</pose>
+      <pose>0 2.1 0.2 0 0 0</pose> <!-- 第一个模型的位置 -->
     </include>
 
     <include>
@@ -158,9 +158,15 @@
       <pose>0 0 0.2 0 0 0</pose>
     </include>
 
-    <model name='middle '>
+    <include>
+      <uri>model://generic_tiltrotor_vtol/model.sdf</uri>
+      <name>generic_tiltrotor_vtol_2</name>
+      <pose>0 -2.1 0.2 0 0 0</pose>
+    </include>
+
+    <model name='middle_0'>
       <pose>0 1.05 0.2 0 0 0</pose>
-      <link name='middle_link'>
+      <link name='base_link'>
         <pose>0 0 0 0 0 0</pose>
         <inertial>
           <mass>0.01</mass>
@@ -170,7 +176,35 @@
             <izz>0.001</izz>
           </inertia>
         </inertial>
-        <visual name='middle_visual'>
+        <visual name='base_visual_0'>
+          <pose>-0.23 0 0 0 0 0</pose>
+          <geometry>
+            <box>
+              <size>0.2 0.03 0.01</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0 0 0.95 1.0</ambient>
+            <diffuse>0 0 0.95 1.0</diffuse>
+          </material>
+        </visual>
+      </link>
+      <static>0</static>
+    </model>
+
+    <model name='middle_1'>
+      <pose>0 -1.05 0.2 0 0 0</pose>
+      <link name='base_link'>
+        <pose>0 0 0 0 0 0</pose>
+        <inertial>
+          <mass>0.01</mass>
+          <inertia>
+            <ixx>0.001</ixx>
+            <iyy>0.001</iyy>
+            <izz>0.001</izz>
+          </inertia>
+        </inertial>
+        <visual name='base_visual_1'>
           <pose>-0.23 0 0 0 0 0</pose>
           <geometry>
             <box>
@@ -187,8 +221,8 @@
     </model>
 
     <joint name="tiltrotor_joint_0" type="revolute">
-      <child>generic_tiltrotor_vtol_0::base_link</child>
-      <parent>middle::middle_link</parent>
+      <parent>generic_tiltrotor_vtol_0::base_link</parent>
+      <child>middle_0::base_link</child>
       <axis>
         <xyz>1 0 0</xyz>
         <limit>
@@ -196,12 +230,12 @@
           <upper>0.1</upper>
         </limit>
       </axis>
-      <pose relative_to="middle">0 0 0 0 0 0</pose>
+      <pose relative_to="middle_0">0 0 0 0 0 0</pose>
     </joint>
 
 
     <joint name="tiltrotor_joint_1" type="revolute">
-      <parent>middle::middle_link</parent>
+      <parent>middle_0::base_link</parent>
       <child>generic_tiltrotor_vtol_1::base_link</child>
       <axis>
         <xyz>1 0 0</xyz>
@@ -210,10 +244,34 @@
           <upper>0.1</upper>
         </limit>
       </axis>
-      <pose relative_to="middle">0 0 0 0 0 0</pose>
+      <pose relative_to="middle_0">0 0 0 0 0 0</pose>
     </joint>
 
+    <joint name="tiltrotor_joint_2" type="revolute">
+      <parent>generic_tiltrotor_vtol_1::base_link</parent>
+      <child>middle_1::base_link</child>
+      <axis>
+        <xyz>1 0 0</xyz>
+        <limit>
+          <lower>-0.1</lower>
+          <upper>0.1</upper>
+        </limit>
+      </axis>
+      <pose relative_to="middle_1">0 0 0 0 0 0</pose>
+    </joint>
 
+    <joint name="tiltrotor_joint_3" type="revolute">
+      <parent>middle_1::base_link</parent>
+      <child>generic_tiltrotor_vtol_2::base_link</child>
+      <axis>
+        <xyz>1 0 0</xyz>
+        <limit>
+          <lower>-0.1</lower>
+          <upper>0.1</upper>
+        </limit>
+      </axis>
+      <pose relative_to="middle_1">0 0 0 0 0 0</pose>
+    </joint>
 
 
   </world>
