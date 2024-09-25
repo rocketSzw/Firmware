@@ -158,9 +158,15 @@
       <pose>0 0 0.2 0 0 0</pose>
     </include>
 
-    <model name='middle '>
+    <include>
+      <uri>model://generic_tiltrotor_vtol/model.sdf</uri>
+      <name>generic_tiltrotor_vtol_2</name>
+      <pose>0 -2.1 0.2 0 0 0</pose>
+    </include>
+
+    <model name='middle_0 '>
       <pose>0 1.05 0.2 0 0 0</pose>
-      <link name='middle_link'>
+      <link name='middle_0_link'>
         <pose>0 0 0 0 0 0</pose>
         <inertial>
           <mass>0.01</mass>
@@ -170,7 +176,7 @@
             <izz>0.001</izz>
           </inertia>
         </inertial>
-        <visual name='middle_visual'>
+        <visual name='middle_0_visual'>
           <pose>-0.23 0 0 0 0 0</pose>
           <geometry>
             <box>
@@ -186,22 +192,43 @@
       <static>0</static>
     </model>
 
-    <joint name="tiltrotor_joint_0" type="revolute">
-      <child>generic_tiltrotor_vtol_0::base_link</child>
-      <parent>middle::middle_link</parent>
+
+    <joint name="tiltrotor_joint_0" type="universal">
+      <parent>generic_tiltrotor_vtol_0::base_link</parent>
+      <child>middle_0::middle_0_link</child>
       <axis>
         <xyz>1 0 0</xyz>
         <limit>
           <lower>-0.1</lower>
           <upper>0.1</upper>
         </limit>
+        <dynamics>
+          <damping>0.1</damping>
+          <friction>0.01</friction>
+        </dynamics>
+        <spring_reference>0</spring_reference>
+        <spring_stiffness>100.0</spring_stiffness>
       </axis>
-      <pose relative_to="middle">0 0 0 0 0 0</pose>
+
+      <axis2>
+        <xyz>0 1 0</xyz>
+        <limit>
+          <lower>-0.05</lower>
+          <upper>0.05</upper>
+        </limit>
+        <dynamics>
+          <damping>0.1</damping>
+          <friction>0.01</friction>
+        </dynamics>
+        <spring_reference>0</spring_reference>
+        <spring_stiffness>100.0</spring_stiffness>
+      </axis2>
+      <pose relative_to="middle_0">0 0 0 0 0 0</pose>
     </joint>
 
 
-    <joint name="tiltrotor_joint_1" type="revolute">
-      <parent>middle::middle_link</parent>
+    <joint name="tiltrotor_joint_1" type="universal">
+      <parent>middle_0::middle_0_link</parent>
       <child>generic_tiltrotor_vtol_1::base_link</child>
       <axis>
         <xyz>1 0 0</xyz>
@@ -209,11 +236,125 @@
           <lower>-0.1</lower>
           <upper>0.1</upper>
         </limit>
+        <dynamics>
+          <damping>0.1</damping>
+          <friction>0.01</friction>
+        </dynamics>
+        <spring_reference>0</spring_reference>
+        <spring_stiffness>100.0</spring_stiffness>
       </axis>
-      <pose relative_to="middle">0 0 0 0 0 0</pose>
+
+      <axis2>
+        <xyz>0 1 0</xyz>
+        <limit>
+          <lower>-0.05</lower>
+          <upper>0.05</upper>
+        </limit>
+        <dynamics>
+          <damping>0.1</damping>
+          <friction>0.01</friction>
+        </dynamics>
+        <spring_reference>0</spring_reference>
+        <spring_stiffness>100.0</spring_stiffness>
+      </axis2>
+      <pose relative_to="middle_0">0 0 0 0 0 0</pose>
+    </joint>
+
+    <model name='middle_1 '>
+      <pose>0 -1.05 0.2 0 0 0</pose>
+      <link name='middle_1_link'>
+        <pose>0 0 0 0 0 0</pose>
+        <inertial>
+          <mass>0.01</mass>
+          <inertia>
+            <ixx>0.001</ixx>
+            <iyy>0.001</iyy>
+            <izz>0.001</izz>
+          </inertia>
+        </inertial>
+        <visual name='middle_1_visual'>
+          <pose>-0.23 0 0 0 0 0</pose>
+          <geometry>
+            <box>
+              <size>0.2 0.03 0.01</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0 0 0.95 1.0</ambient>
+            <diffuse>0 0 0.95 1.0</diffuse>
+          </material>
+        </visual>
+      </link>
+      <static>0</static>
+    </model>
+
+    <joint name="tiltrotor_joint_2" type="universal">
+      <parent>generic_tiltrotor_vtol_1::base_link</parent>
+      <child>middle_1::middle_1_link</child>
+      <axis>
+        <xyz>1 0 0</xyz>
+        <limit>
+          <lower>-0.1</lower>
+          <upper>0.1</upper>
+        </limit>
+        <dynamics>
+          <damping>0.1</damping>
+          <friction>0.01</friction>
+        </dynamics>
+        <spring_reference>0</spring_reference>
+        <spring_stiffness>100.0</spring_stiffness>
+      </axis>
+
+      <axis2>
+        <xyz>0 1 0</xyz>
+        <limit>
+          <lower>-0.05</lower>
+          <upper>0.05</upper>
+        </limit>
+        <dynamics>
+          <damping>0.1</damping>
+          <friction>0.01</friction>
+        </dynamics>
+        <spring_reference>0</spring_reference>
+        <spring_stiffness>100.0</spring_stiffness>
+      </axis2>
+      <pose relative_to="middle_1">0 0 0 0 0 0</pose>
     </joint>
 
 
+    <joint name="tiltrotor_joint_3" type="universal">
+      <parent>middle_1::middle_1_link</parent>
+      <child>generic_tiltrotor_vtol_2::base_link</child>
+      <axis>
+        <xyz>1 0 0</xyz>
+        <limit>
+          <lower>-0.1</lower>
+          <upper>0.1</upper>
+        </limit>
+        <dynamics>
+          <damping>0.1</damping>
+          <friction>0.01</friction>
+        </dynamics>
+        <spring_reference>0</spring_reference>
+        <spring_stiffness>100.0</spring_stiffness>
+      </axis>
+
+
+      <axis2>
+        <xyz>0 1 0</xyz>
+        <limit>
+          <lower>-0.05</lower>
+          <upper>0.05</upper>
+        </limit>
+        <dynamics>
+          <damping>0.1</damping>
+          <friction>0.01</friction>
+        </dynamics>
+        <spring_reference>0</spring_reference>
+        <spring_stiffness>100.0</spring_stiffness>
+      </axis2>
+      <pose relative_to="middle_1">0 0 0 0 0 0</pose>
+    </joint>
 
 
   </world>
